@@ -1,0 +1,15 @@
+node_modules/*
+build/*
+**/#*
+**/*~
+**/*.log
+**/*.wasm
+**/*.pyc
+**/*.wast
+**/.#*
+**/a.txt
+**/TAGS
+**/.DS_Store
+**/.vscode
+
+

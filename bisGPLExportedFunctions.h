@@ -47,7 +47,7 @@ extern "C" {
   */
 
   /** Returns 1*/
-  // BIS: { 'test_wasm', 'Int' } 
+  // BIS: { 'uses_gpl', 'Int' } 
   BISEXPORT int uses_gpl();
   
   
