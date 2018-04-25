@@ -46,6 +46,11 @@ extern "C" {
       Functions exported to JS and Python
   */
 
+  /** Returns 1*/
+  // BIS: { 'test_wasm', 'Int' } 
+  BISEXPORT int uses_gpl();
+  
+  
   /** run Linear Image Registration using \link bisLinearImageRegistration  \endlink
    * @param reference serialized reference image as unsigned char array 
    * @param target    serialized target image as unsigned char array 
