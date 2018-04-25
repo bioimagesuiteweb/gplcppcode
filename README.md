@@ -1,9 +1,8 @@
-The files in this directory is a plugin for
-[BioImage Suite Web](https://github.com/bioimagesuiteweb/bisweb) and derive
-from the legacy BioImage Suite Software Package (www.bioimagesuite.org). They
+This repository contains a plugin for
+[BioImage Suite Web](https://github.com/bioimagesuiteweb/bisweb). These files
 are released under the GPL v2.
 
-To compile these you need the rest of the source code. When compiling the C++
+To compile the plugin you need the rest of the source code. When compiling the C++
 code set the `BIS_USEGPL` flag to `ON` and the path `BIS_GPL_DIR` to point to
 the location of these files.
 
