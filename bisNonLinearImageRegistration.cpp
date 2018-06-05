@@ -172,12 +172,11 @@ float bisNonLinearImageRegistration::computeGradient(std::vector<float>& params,
   int dim_ref[3]; level_reference->getImageDimensions(dim_ref);
   float spa_ref[3]; level_reference->getImageSpacing(spa_ref);
   float window_size=1.0;
-  float step_size=1.0;
   
   return this->currentGridTransformation->computeGradientForOptimization(params,grad,
-								      step_size,
-								      dim_ref,spa_ref,window_size,
-								      this);
+                                                                         this->current_step_size,
+                                                                         dim_ref,spa_ref,window_size,
+                                                                         this);
 
 }
 
@@ -204,9 +203,16 @@ void bisNonLinearImageRegistration::initializeLevel(int lv,bisAbstractTransforma
 {
 
   if (initial==0)
-    initial=this->internalTransformation.get();
-  
-  bisAbstractImageRegistration::initializeLevel(lv,initial);
+    {
+      std::cout << "Using current internal Transformation" << " " << this->internalTransformation->getNumberOfGridTransformations() << " "<< std::endl;
+      
+      bisAbstractImageRegistration::initializeLevel(lv,this->internalTransformation.get());
+    }
+  else
+    {
+      bisAbstractImageRegistration::initializeLevel(lv,initial);
+    }
+
   
   std::unique_ptr<bisSimpleImage<short> > tmp(new bisSimpleImage<short>(this->name+":part_temp_target_image"));
   this->part_temp_target=std::move(tmp);
@@ -287,7 +293,7 @@ void bisNonLinearImageRegistration::run(bisJSONParameterList* plist)
       this->generateFeedback2("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
       float spa[3]; this->level_reference->getImageSpacing(spa);
       int numdof=this->currentGridTransformation->getNumberOfDOF();
-      this->current_step_size=stepsize*powf(2.0f,float(numsteps-1))*0.5f*spa[0];
+      this->current_step_size=stepsize*powf(2.0f,float(numsteps-1))*spa[0];
       this->generateFeedback2("+ + ");
       std::stringstream strss3;
       strss3 << "+ +  \t\t Beginning level=" << level << " resolution=" << spa[0] << " numdof=" << numdof << " current_step=" << this->current_step_size;

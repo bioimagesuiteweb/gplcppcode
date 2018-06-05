@@ -139,11 +139,28 @@ int bisAbstractImageRegistration::prepareImagesForRegistration(float resolution_
 
   this->level_reference=
     bisImageAlgorithms::prepareImageForRegistration(this->reference.get(),numbins,normalize,resolution_factor,smoothing,intscale,ref_frame,
-						    this->name+":level_ref_image",0,this->enable_feedback);
+						    this->name+":level_ref_image",this->enable_feedback);
 
-  this->level_target=
-    bisImageAlgorithms::prepareImageForRegistration(this->target.get(),numbins,normalize,resolution_factor,smoothing,intscale,targ_frame,
-						    this->name+":level_targ_image",initial,this->enable_feedback);
+
+  if (initial)
+    {
+      std::unique_ptr<bisSimpleImage<float> > temp(new bisSimpleImage<float>("temp"));
+      temp->copyStructure(this->reference.get());
+      std::cout << "+++ Reslicing using initial transformation first" << std::endl;
+      bisImageAlgorithms::resliceImage(this->target.get(),temp.get(),initial,1,0.0);      
+      this->level_target=bisImageAlgorithms::prepareImageForRegistration(temp.get(),numbins,normalize,
+                                                                         resolution_factor,
+                                                                         smoothing,
+                                                                         intscale,targ_frame,
+                                                                         this->name+":level_targ_image",
+                                                                         1);
+    }
+  else
+    {
+      this->level_target=
+        bisImageAlgorithms::prepareImageForRegistration(this->target.get(),numbins,normalize,resolution_factor,smoothing,intscale,targ_frame,
+                                                        this->name+":level_targ_image",this->enable_feedback);
+    }
 
   // This resolution factor should be 1 !!!!!!!!11 (do not reslice until later .. i.e. do not reslice!)
   
