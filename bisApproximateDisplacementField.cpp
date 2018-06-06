@@ -33,6 +33,7 @@
 bisApproximateDisplacementField::bisApproximateDisplacementField(std::string s) : bisOptimizableAlgorithm(s)
 {
   this->class_name="bisApproximateDisplacementField";
+  this->enable_feedback=0;
 }
 
 bisApproximateDisplacementField::~bisApproximateDisplacementField()
@@ -53,6 +54,11 @@ void bisApproximateDisplacementField::generateFeedback2(std::string input)
 {
    std::cout << input << std::endl;
 }
+
+float bisApproximateDisplacementField::getCurrentStepSize() {
+  return this->current_step_size;
+}
+
 
 // Optimizer Stuff
 float bisApproximateDisplacementField::computeValue(std::vector<float>& position)
@@ -140,9 +146,9 @@ float bisApproximateDisplacementField::computeGradient(std::vector<float>& param
   float spa_ref[3]; level_reference->getImageSpacing(spa_ref);
 
   return this->currentGridTransformation->computeGradientForOptimization(params,grad,
-									   this->current_step_size,
-									   dim_ref,spa_ref,this->windowsize,
-									   this);
+                                                                         this->current_step_size,
+                                                                         dim_ref,spa_ref,this->windowsize,
+                                                                         this);
 }
 
   
@@ -165,7 +171,8 @@ int bisApproximateDisplacementField::checkInputParameters(bisJSONParameterList* 
   this->lambda=this->internalParameters->getFloatValue("lambda",0.0f);
   this->windowsize=  this->internalParameters->getFloatValue("windowsize",1.0f);
   this->inverse=this->internalParameters->getIntValue("inverse");
-  this->internalParameters->print("Checked!");
+  if (this->enable_feedback)
+    this->internalParameters->print("Approximate Displacement Field");
   return 1;
 }
 
@@ -209,12 +216,10 @@ float bisApproximateDisplacementField::run(bisSimpleImage<float>* displacementGr
 
   this->currentGridTransformation=transformation;
   this->currentDisplacementField=displacementGrid;
-  
-  this->generateFeedback2("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+  if (this->enable_feedback)
+    this->generateFeedback2("++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ +");
   this->checkInputParameters(plist);
-
-  this->generateFeedback2("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-
 
   std::stringstream strss;
   strss.precision(5);
@@ -227,35 +232,31 @@ float bisApproximateDisplacementField::run(bisSimpleImage<float>* displacementGr
 
   // Also cps, cpsrate, windowsize, lambda ...
   
-  std::cout << "++++ Retrieved parameters: nlevels=" << numlevels << " numsteps=" << numsteps << " stepsize=" << stepsize << std::endl;
-  std::cout << "++++   iterations=" << iterations << " tolerance=" << tolerance << std::endl;
-
 
   float last=0.0;
 
   for (int level=numlevels;level>=1;level=level-1)
     {
 
-      this->generateFeedback2("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+      this->generateFeedback2("++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ +");
       strss.clear();
       std::stringstream strss2;
       if (!this->inverse)
-	strss2 << "++++ Beginning to appproximate FORWARD displacement field at level=" << level << ", numsteps=" << numsteps << ", tolerance=" << tolerance;
+	strss2 << "++   Beginning to appproximate FORWARD displacement field at level=" << level << ", numsteps=" << numsteps << ", tolerance=" << tolerance;
       else
-      	strss2 << "++++ Beginning to appproximate INVERSE displacement field at level=" << level << ", numsteps=" << numsteps << ", tolerance=" << tolerance;
+      	strss2 << "++   Beginning to appproximate INVERSE displacement field at level=" << level << ", numsteps=" << numsteps << ", tolerance=" << tolerance;
       this->generateFeedback2(strss2.str());
-      this->generateFeedback2("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
       this->initializeLevel(level);
 
-      this->generateFeedback2("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
       float spa[3]; this->level_reference->getImageSpacing(spa);
       int numdof=this->currentGridTransformation->getNumberOfDOF();
-      this->current_step_size=stepsize*powf(2.0,float(numsteps-1))*0.5f*spa[0];
-      this->generateFeedback2("++++");
+      this->current_step_size=stepsize*powf(2.0,float(numsteps-1))*spa[0];
+      this->generateFeedback2("++  ");
       std::stringstream strss3;
-      strss3 << "++++ \t\t beginning level=" << level << " resolution=" << spa[0] << " numdof=" << numdof << " current_step=" << this->current_step_size;
+      strss3 << "++   Approx Level=" << level << " resolution=" << spa[0] << " numdof=" << numdof << " current_step=" << this->current_step_size << " ( step=" << stepsize << ", spa[0]=" << spa[0] << ")";
       this->generateFeedback2(strss3.str());
-      this->generateFeedback2("++++");
+      this->generateFeedback2("++  ");
       // Set stepsize
 
       std::unique_ptr<bisOptimizer> optimizer(new bisOptimizer(this));
@@ -267,20 +268,18 @@ float bisApproximateDisplacementField::run(bisSimpleImage<float>* displacementGr
       
       for (int step=numsteps;step>=1;step=step-1)
 	{
-	  std::cout << "~~~~ In step = " << step << " \t iterations = " << iterations << " cur=" << this->current_step_size << std::endl;
+	  std::cout << "~~~~ In step = " << step << ", iterations = " << iterations << " cur=" << this->current_step_size;
 
 	  strss.clear();
 	  this->generateFeedback2(strss.str());
 	  last=optimizer->computeConjugateGradient(position,iterations,tolerance);
 	  this->current_step_size=this->current_step_size/2.0f;
 	}
-      this->generateFeedback2("++++");
-      this->generateFeedback2("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-
+      this->generateFeedback2("++  ");
     }
 
 
-  this->generateFeedback2("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+  this->generateFeedback2("++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ +");
 
   return last;
 }

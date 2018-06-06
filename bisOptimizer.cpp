@@ -457,12 +457,14 @@ float bisOptimizer::computeConjugateGradient(std::vector<float>& position,int it
     gradient.resize(numdof);
 		
   std::stringstream line;
-  line << "Beginning (it=" << iterations << "), tol=" <<  tolerance << ", st=" << this->algorithm->getCurrentStepSize() << " ";
+  line << "CG: Beginning (it=" << iterations << "), tol=" <<  tolerance << ", stepsize=" << this->algorithm->getCurrentStepSize();
+  std::stringstream line2;
+  line2 << std::endl << "~~~~ \t CG:Init";
 		
   this->algorithm->beginIteration(position,0);
   this->NumEvaluations+=1;
   float funcval=this->algorithm->computeValue(position);
-  this->generateOutput("CG",line.str(),position,funcval);
+  this->generateOutput(line.str(),line2.str(),position,funcval);
 
   this->NumGradients+=1;
   float norm=this->algorithm->computeGradient(position,this->gradient);

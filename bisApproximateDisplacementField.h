@@ -71,6 +71,9 @@ class bisApproximateDisplacementField : public bisOptimizableAlgorithm,bisGridTr
    * @param input string to print */
   virtual void generateFeedback2(std::string input);
 
+  // Get Step Size
+  virtual float getCurrentStepSize();
+
 protected:
 
   /** the parameter list */

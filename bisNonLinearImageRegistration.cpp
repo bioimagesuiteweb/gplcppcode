@@ -286,22 +286,30 @@ void bisNonLinearImageRegistration::initializeLevelAndGrid(int lv,int numlevels)
           initial->setInitialTransformation(ident.get());
           
           // Compute the displacement field from initial
-          std::unique_ptr< bisSimpleImage<float> > disp_field(initial->computeDisplacementField(dim_ref,spa_ref));
+          int newdim[3]; float newspa[3];
+          for (int ia=0;ia<=2;ia++) {
+            newspa[ia]=this->current_cps[ia]*0.25;
+            newdim[ia]=int( ((dim_ref[ia]+1)*spa_ref[ia])/newspa[ia]+0.5)-1;
+          }
+
+          this->generateFeedback2("++  ");
+          std::cout << "+ + Computing displacement field to fit. Dim=" <<newdim[0] << "," << newdim[1] << "," << newdim[2] <<
+            ", spa=" << newspa[0] << "," << newspa[1] << "," << newspa[2] << std::endl;
+          std::unique_ptr< bisSimpleImage<float> > disp_field(initial->computeDisplacementField(newdim,newspa));
           
           // Approximate it
           std::unique_ptr<bisApproximateDisplacementField> reg(new bisApproximateDisplacementField("approx"));
           
           std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
-          std::string jsonstring="{ \"inverse\" : 0, \"levels\" : 2 \"resolution\" : 1, \"lambda\" : 0.1, \"iterations\" : 10 }";
-          if (!params->parseJSONString(jsonstring.c_str())) {
-            std::cerr << "Something is very wrong" << std::endl;
-            return;
-          }
+          params->setFloatValue("lambda",0.1);
+          params->setFloatValue("tolerance",spa_ref[0]*0.02);
+          params->setIntValue("inverse",0);
+          params->setIntValue("levels",3);
+          params->setFloatValue("resolution",1.0);
+          params->setIntValue("steps",3);
+          params->setIntValue("iterations",10);
+          params->setFloatValue("stepsize",0.125);
           
-          std::cout << "-------------------------------" << std::endl;
-          std::cout << "--- Approximating Initial Transformation " << std::endl;
-          std::cout << "-------------------------------" << std::endl;
-          params->print("from runApproximateDisplacementField","_____");
           reg->run(disp_field.get(),this->currentGridTransformation.get(),params.get());
           std::cout << "-------------------------------" << std::endl;
           initial->setInitialTransformation(oldlinear);
