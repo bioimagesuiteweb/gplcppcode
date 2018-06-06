@@ -270,7 +270,7 @@ void bisLinearImageRegistration::run(bisJSONParameterList* plist)
       float spa[3]; this->level_reference->getImageSpacing(spa);
       int numdof=this->internalTransformation->getNumberOfDOF();
       std::stringstream strss3;
-      this->current_step_size=stepsize*powf(2.0f,float(numsteps-1))*0.5f*spa[0];
+      this->current_step_size=stepsize*powf(2.0f,float(numsteps-1))*spa[0];
       strss3 << "+ +  \t\t Beginning level=" << level << " resolution=" << spa[0] << " numdof=" << numdof << " current_step=" << this->current_step_size;
       this->generateFeedback("+ + ");
       this->generateFeedback(strss3.str());
