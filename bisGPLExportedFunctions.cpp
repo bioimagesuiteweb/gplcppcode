@@ -64,8 +64,8 @@ unsigned char* runLinearRegistrationWASM(unsigned char* reference,
 
   int return_vector=params->getBooleanValue("return_vector",0);
   
-  if(debug)
-    params->print("from runLinearRegistrationJSON","_____");
+  //  if(debug)
+  //    params->print("from runLinearRegistrationJSON","_____");
 
   std::shared_ptr<bisSimpleImage<float> > reference_image(new bisSimpleImage<float>("reference_image_json"));
   if (!reference_image->linkIntoPointer(reference))
@@ -129,8 +129,8 @@ unsigned char* runNonLinearRegistrationWASM(unsigned char* reference,
   if (!params->parseJSONString(jsonstring))
     return 0;
 
-  if(debug)
-    params->print("from runNonLinearRegistrationJSON","_____");
+  //  if(debug)
+  //    params->print("from runNonLinearRegistrationJSON","_____");
 
   std::shared_ptr<bisSimpleImage<float> > reference_image(new bisSimpleImage<float>("reference_image_json"));
   if (!reference_image->linkIntoPointer(reference))
@@ -258,8 +258,8 @@ unsigned char* approximateDisplacementFieldWASM(unsigned char* dispfield_ptr,
   if (!params->parseJSONString(jsonstring))
     return 0;
 
-  if(debug)
-    params->print("from runApproximateDisplacementField","_____");
+  //  if(debug)
+  //    params->print("from runApproximateDisplacementField","_____");
 
   std::unique_ptr<bisSimpleImage<float> > disp_field(new bisSimpleImage<float>("disp_field_json"));
   if (!disp_field->linkIntoPointer(dispfield_ptr))

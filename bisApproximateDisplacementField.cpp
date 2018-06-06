@@ -237,8 +237,6 @@ float bisApproximateDisplacementField::run(bisSimpleImage<float>* displacementGr
 
   for (int level=numlevels;level>=1;level=level-1)
     {
-
-      this->generateFeedback2("++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ +");
       strss.clear();
       std::stringstream strss2;
       if (!this->inverse)
@@ -279,7 +277,6 @@ float bisApproximateDisplacementField::run(bisSimpleImage<float>* displacementGr
     }
 
 
-  this->generateFeedback2("++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ +");
 
   return last;
 }

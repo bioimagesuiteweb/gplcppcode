@@ -93,12 +93,28 @@ protected:
 
   // Initialize Level
   virtual void initializeLevelAndGrid(int lv,int numlevels);
-  
 
+  /** Approximate Transformation with Grid
+   * @param dispfield the displacement field
+   * @param grid the grid to fit
+   */
+  virtual void approximateDisplacementField(bisSimpleImage<float>* dispfield,bisGridTransformation* newgrd,int fast=0);
+    
+  /** Compute a displacement field to fit later given a current transformation
+   * @param dispfield the displacement field
+   * @param spa the resolution
+   * @returns the displacement field
+   */
+  std::unique_ptr<bisSimpleImage<float> > computeDisplacementField(bisAbstractTransformation* old);
+
+  
 #ifndef DOXYGEN_SKIP  
-  double totaltime,reslicetime,filltime;
+  double totaltime;
 #endif
 
+  /** append mode -- if > 0 then append grids instead of fitting them */
+  int append_mode;
+  
   /** The current control point spacing */
   float current_cps[3];
 

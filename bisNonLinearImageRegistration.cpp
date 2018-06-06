@@ -37,6 +37,7 @@ bisNonLinearImageRegistration::bisNonLinearImageRegistration(std::string s) : bi
   this->internalTransformation->identity();
   this->class_name="bisNonLinearImageRegistration";
   this->hasInitialTransformation=0;
+  this->append_mode=1;
 }
 
 bisNonLinearImageRegistration::~bisNonLinearImageRegistration()
@@ -182,6 +183,7 @@ int bisNonLinearImageRegistration::checkInputParameters(bisJSONParameterList* pl
   this->internalParameters->setFloatValue("cpsrate",bisUtil::frange(plist->getFloatValue("cpsrate",2.0f),1.0f,2.0f));
   this->internalParameters->setFloatValue("lambda",bisUtil::frange(plist->getFloatValue("lambda",0.0f),0.0f,1.0f));
   this->internalParameters->setFloatValue("windowsize",bisUtil::frange(plist->getFloatValue("windowsize",1.0f),1.0f,2.0f));
+  this->internalParameters->setBooleanValue("appendmode",plist->getBooleanValue("appendmode",1));
 
   if (this->enable_feedback)
     this->internalParameters->print("Fixed Parameters prior to running Non Linear","+ + + ");
@@ -192,6 +194,58 @@ int bisNonLinearImageRegistration::checkInputParameters(bisJSONParameterList* pl
   return 1;
 }
 
+// ------------------------------------------------------------------------------------------
+std::unique_ptr<bisSimpleImage<float> > bisNonLinearImageRegistration::computeDisplacementField(bisAbstractTransformation* old)
+{
+
+  int dim_ref[3]; level_reference->getImageDimensions(dim_ref);
+  float spa_ref[3]; level_reference->getImageSpacing(spa_ref);
+  int newdim[3]; float newspa[3];
+  for (int ia=0;ia<=2;ia++) {
+    newspa[ia]=this->current_cps[ia]/3.0;
+    newdim[ia]=int( ((dim_ref[ia]+1)*spa_ref[ia])/newspa[ia]+0.5)-1;
+  }
+
+  this->generateFeedback2("++  ");
+  std::cout << "+ + Computing displacement field to fit. Dim=" <<newdim[0] << "," << newdim[1] << "," << newdim[2] <<
+    ", spa=" << newspa[0] << "," << newspa[1] << "," << newspa[2] << std::endl;
+  std::unique_ptr< bisSimpleImage<float> > disp_field(old->computeDisplacementField(newdim,newspa));
+  return std::move(disp_field);
+}
+
+void bisNonLinearImageRegistration::approximateDisplacementField(bisSimpleImage<float>* dispfield,bisGridTransformation* newgrd,int fast)
+
+{
+  // Compute the displacement field from old
+  float spa_ref[3]; level_reference->getImageSpacing(spa_ref);
+  
+  std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
+  params->setFloatValue("lambda",0.1);
+  params->setFloatValue("tolerance",spa_ref[0]*0.02);
+  params->setIntValue("inverse",0);
+  if (fast)
+    {
+      params->setIntValue("levels",1);
+      params->setFloatValue("resolution",1.0);
+      params->setIntValue("steps",2);
+      params->setIntValue("iterations",5);
+      params->setFloatValue("stepsize",0.125);
+    }
+  else
+    {
+      params->setIntValue("levels",2);
+      params->setFloatValue("resolution",1.0);
+      params->setIntValue("steps",3);
+      params->setIntValue("iterations",10);
+      params->setFloatValue("stepsize",0.125);
+    }
+
+  std::unique_ptr<bisApproximateDisplacementField> reg(new bisApproximateDisplacementField("approx"));
+  reg->run(dispfield,newgrd,params.get());
+}
+
+// ------------------------------------------------------------------------------------------
+
 void bisNonLinearImageRegistration::initializeLevelAndGrid(int lv,int numlevels)
 {
 
@@ -200,7 +254,7 @@ void bisNonLinearImageRegistration::initializeLevelAndGrid(int lv,int numlevels)
   if (lv==numlevels && this->hasInitialTransformation)
     {
       // If this is the lowest resolution we need to figure out how to handle internal
-
+      
       int islinear=this->initialTransformation->isLinear();
       
       std::cout << "+ + \t we have an initial transformation, linear=" << islinear << std::endl;
@@ -221,11 +275,18 @@ void bisNonLinearImageRegistration::initializeLevelAndGrid(int lv,int numlevels)
       }
     }
 
-
-  bisAbstractImageRegistration::initializeLevel(lv,this->internalTransformation.get());
-
-
-
+  if (this->append_mode)
+    {
+      bisAbstractImageRegistration::initializeLevel(lv,this->internalTransformation.get());
+    }
+  else
+    {
+      bisUtil::mat44 m;
+      this->internalTransformation->getInitialTransformation(m);
+      std::unique_ptr<bisMatrixTransformation> temp_linear(new bisMatrixTransformation("temp_linear"));
+      temp_linear->setMatrix(m);
+      bisAbstractImageRegistration::initializeLevel(lv,temp_linear.get());
+    }
 
   
   
@@ -262,61 +323,54 @@ void bisNonLinearImageRegistration::initializeLevelAndGrid(int lv,int numlevels)
 
   std::stringstream strss;
   strss << this->name << "_grid_" << lv;
+
   
-  std::shared_ptr<bisGridTransformation> tmp_g(new bisGridTransformation(strss.str()));
-  this->currentGridTransformation=std::move(tmp_g);
-  this->currentGridTransformation->initializeGrid(this->current_dim,this->current_cps,grid_ori,1);
-
-
   // Do we need to approximate the grid
-  if (lv==numlevels && this->hasInitialTransformation)
+  if (lv !=numlevels && append_mode==0)
     {
-      
-      int islinear=this->initialTransformation->isLinear();
-      if (islinear == -1)
-        {
-          // We have a combo
-          bisComboTransformation* initial=(bisComboTransformation*)(this->initialTransformation.get());
-          
-          // store this for now
-          bisUtil::mat44 oldlinear; initial->getInitialTransformation(oldlinear);
-          
-          std::unique_ptr<bisMatrixTransformation> ident(new bisMatrixTransformation);
-          ident->identity();
-          initial->setInitialTransformation(ident.get());
-          
-          // Compute the displacement field from initial
-          int newdim[3]; float newspa[3];
-          for (int ia=0;ia<=2;ia++) {
-            newspa[ia]=this->current_cps[ia]*0.25;
-            newdim[ia]=int( ((dim_ref[ia]+1)*spa_ref[ia])/newspa[ia]+0.5)-1;
-          }
+      // Fit the previous grid
+      std::cout << "+ + ================================================" << std::endl;
+      std::cout << "+ + Fitting previous grid" << std::endl;
 
-          this->generateFeedback2("++  ");
-          std::cout << "+ + Computing displacement field to fit. Dim=" <<newdim[0] << "," << newdim[1] << "," << newdim[2] <<
-            ", spa=" << newspa[0] << "," << newspa[1] << "," << newspa[2] << std::endl;
-          std::unique_ptr< bisSimpleImage<float> > disp_field(initial->computeDisplacementField(newdim,newspa));
-          
-          // Approximate it
-          std::unique_ptr<bisApproximateDisplacementField> reg(new bisApproximateDisplacementField("approx"));
-          
-          std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
-          params->setFloatValue("lambda",0.1);
-          params->setFloatValue("tolerance",spa_ref[0]*0.02);
-          params->setIntValue("inverse",0);
-          params->setIntValue("levels",3);
-          params->setFloatValue("resolution",1.0);
-          params->setIntValue("steps",3);
-          params->setIntValue("iterations",10);
-          params->setFloatValue("stepsize",0.125);
-          
-          reg->run(disp_field.get(),this->currentGridTransformation.get(),params.get());
-          std::cout << "-------------------------------" << std::endl;
-          initial->setInitialTransformation(oldlinear);
-        }
+
+      std::unique_ptr<bisSimpleImage<float> > dispfield(this->computeDisplacementField(this->currentGridTransformation.get()));
+      this->currentGridTransformation->initializeGrid(this->current_dim,this->current_cps,grid_ori,1);
+      this->approximateDisplacementField(dispfield.get(),this->currentGridTransformation.get(),1);
+      std::cout << "+ + ================================================" << std::endl;
     }
+  else
+    {
+      // First create a new grid
+      std::shared_ptr<bisGridTransformation> tmp_g(new bisGridTransformation(strss.str()));
+      this->currentGridTransformation=std::move(tmp_g);
+      this->currentGridTransformation->initializeGrid(this->current_dim,this->current_cps,grid_ori,1);
+      
+      
+      // Then check if need to fit it
+      
+      if (lv==numlevels && this->hasInitialTransformation)
+        {
+          int islinear=this->initialTransformation->isLinear();
+          if (islinear == -1)
+            {
+              // We have a combo
+              bisComboTransformation* initial=(bisComboTransformation*)(this->initialTransformation.get());
+              
+              // store this for now
+              bisUtil::mat44 oldlinear; initial->getInitialTransformation(oldlinear);
+              
+              std::unique_ptr<bisMatrixTransformation> ident(new bisMatrixTransformation);
+              ident->identity();
+              initial->setInitialTransformation(ident.get());
+              std::unique_ptr<bisSimpleImage<float> > dispfield(this->computeDisplacementField(initial));
+              this->approximateDisplacementField(dispfield.get(),this->currentGridTransformation.get(),0);
+              initial->setInitialTransformation(oldlinear);
+            }
+        }
 
-
+      // Add the grid to the back of the internalTransformation Combo
+      this->internalTransformation->addTransformation(this->currentGridTransformation);
+    }
 }
 
 
@@ -337,14 +391,15 @@ void bisNonLinearImageRegistration::run(bisJSONParameterList* plist)
   int optimization=this->internalParameters->getIntValue("optimization");
   int iterations=this->internalParameters->getIntValue("iterations");
   float tolerance=this->internalParameters->getFloatValue("tolerance",0.001f);
-
+  this->append_mode=this->internalParameters->getBooleanValue("appendmode",1);
+  
   // Also cps, cpsrate, windowsize, lambda ...
 
   if (this->enable_feedback)
     {
       std::cout << "+ +  Retrieved parameters: nlevels=" << numlevels << " numsteps=" << numsteps << " stepsize=" << stepsize << std::endl;
       std::cout << "+ +      optimization=" << optimization << " iterations=" << iterations << " tolerance=" << tolerance << std::endl;
-      std::cout << "+ +      similarity metric=" << metric << std::endl; // TOADD cps, cpsrate, windowsize
+      std::cout << "+ +      similarity metric=" << metric << ", append_mode=" << this->append_mode << std::endl; // TOADD cps, cpsrate, windowsize
     }
 
   time_t timer1,timer2;
@@ -396,7 +451,7 @@ void bisNonLinearImageRegistration::run(bisJSONParameterList* plist)
 	}
       this->generateFeedback2("+ + ");
       this->generateFeedback2("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
-      this->internalTransformation->addTransformation(this->currentGridTransformation);
+
     }
   time(&timer2);
   std::stringstream strss_final;
