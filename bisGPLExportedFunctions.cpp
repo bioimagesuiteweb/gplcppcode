@@ -140,22 +140,14 @@ unsigned char* runNonLinearRegistrationWASM(unsigned char* reference,
   if (!target_image->linkIntoPointer(target))
     return 0;
 
-  std::unique_ptr<bisMatrixTransformation> initial_transformation(new bisMatrixTransformation("parse_initial"));
-  initial_transformation->identity();
-  
-  std::unique_ptr<bisSimpleMatrix<float> > initial_matrix(new bisSimpleMatrix<float>("initial_matrix_json"));
-  if (initial_ptr!=0)
-    {
-      if (!initial_matrix->linkIntoPointer(initial_ptr))
-	return 0;
-      if (!initial_transformation->setSimpleMatrix(initial_matrix.get()))
-	return 0;
-    }
-
   std::unique_ptr<bisNonLinearImageRegistration> reg(new bisNonLinearImageRegistration("nonlinear"));
   reg->setReferenceImage(reference_image);
   reg->setTargetImage(target_image);
-  reg->setInitialTransformation(initial_transformation.get());
+
+  if (initial_ptr) {
+    std::shared_ptr<bisAbstractTransformation> initial_transformation=bisDataObjectFactory::deserializeTransformation(initial_ptr,"initialxform");
+    reg->setInitialTransformation(initial_transformation);
+  }
   reg->run(params.get());
 
   std::shared_ptr<bisComboTransformation> output(reg->getOutputTransformation());
