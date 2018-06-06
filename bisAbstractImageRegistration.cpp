@@ -41,7 +41,6 @@ bisAbstractImageRegistration::~bisAbstractImageRegistration()
 {
 }
 
-
 void bisAbstractImageRegistration::initializeLevel(int level,bisAbstractTransformation* initial)
 {
   float rsc=this->internalParameters->getFloatValue("resolution",1.5f);
@@ -100,7 +99,7 @@ int bisAbstractImageRegistration::checkInputParameters(bisJSONParameterList* pli
   this->internalParameters->setFloatValue("resolution",bisUtil::frange(plist->getFloatValue("resolution",1.5),0.5f,10.0f));
   this->internalParameters->setFloatValue("resolutionrate",bisUtil::frange(plist->getFloatValue("resolutionrate",2.0f),1.5f,3.0f));
   this->internalParameters->setFloatValue("tolerance",bisUtil::frange(plist->getFloatValue("tolerance",0.001f),0.0f,0.5f));
-  this->internalParameters->setFloatValue("smoothing",bisUtil::frange(plist->getFloatValue("smoothing",-1.0),-1.0,20.0));
+  this->internalParameters->setFloatValue("smoothing",bisUtil::frange(plist->getFloatValue("smoothing",1.0),0.0,20.0));
   
   this->internalParameters->setIntValue("referenceFrame",plist->getIntValue("referenceFrame",0));
   this->internalParameters->setIntValue("targetFrame",plist->getIntValue("targetFrame",0));
@@ -123,7 +122,7 @@ int bisAbstractImageRegistration::prepareImagesForRegistration(float resolution_
   int numbins=this->internalParameters->getIntValue("numbins",64);
   int normalize=this->internalParameters->getBooleanValue("normalize",1);
 
-  float smoothing=this->internalParameters->getFloatValue("smoothing",-1.0);
+  float smoothing=this->internalParameters->getFloatValue("smoothing",1.0);
   int intscale=this->internalParameters->getIntValue("intscale",1);
   
   int ref_frame=this->internalParameters->getIntValue("referenceFrame",0);
@@ -136,7 +135,7 @@ int bisAbstractImageRegistration::prepareImagesForRegistration(float resolution_
       if (this->has_target_weight!=0)
 	this->use_weights=2;
     }
-
+  
   this->level_reference=
     bisImageAlgorithms::prepareImageForRegistration(this->reference.get(),numbins,normalize,resolution_factor,smoothing,intscale,ref_frame,
 						    this->name+":level_ref_image",this->enable_feedback);
@@ -144,16 +143,17 @@ int bisAbstractImageRegistration::prepareImagesForRegistration(float resolution_
 
   if (initial)
     {
-      std::unique_ptr<bisSimpleImage<float> > temp(new bisSimpleImage<float>("temp"));
-      temp->copyStructure(this->reference.get());
-      std::cout << "+++ Reslicing using initial transformation first" << std::endl;
-      bisImageAlgorithms::resliceImage(this->target.get(),temp.get(),initial,1,0.0);      
-      this->level_target=bisImageAlgorithms::prepareImageForRegistration(temp.get(),numbins,normalize,
-                                                                         resolution_factor,
-                                                                         smoothing,
-                                                                         intscale,targ_frame,
-                                                                         this->name+":level_targ_image",
-                                                                         1);
+      
+      int refdim[5]; this->level_reference->getDimensions(refdim);
+      float refspa[5]; this->level_reference->getSpacing(refspa);
+      this->level_target=bisImageAlgorithms::prepareAndResliceImageForRegistration(this->target.get(),
+                                                                                   initial,
+                                                                                   refdim,refspa,
+                                                                                   numbins,normalize,
+                                                                                   smoothing,
+                                                                                   intscale,targ_frame,
+                                                                                   this->name+":level_targ_resl_image",
+                                                                                   1);
     }
   else
     {
@@ -164,7 +164,6 @@ int bisAbstractImageRegistration::prepareImagesForRegistration(float resolution_
 
   // This resolution factor should be 1 !!!!!!!!11 (do not reslice until later .. i.e. do not reslice!)
   
-
   // Temp for reslicing into
   std::unique_ptr<bisSimpleImage<short> > tmp25(new bisSimpleImage<short>(this->name+":temp_target_image"));
   this->temp_target=std::move(tmp25);

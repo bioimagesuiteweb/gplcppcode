@@ -95,11 +95,9 @@ void bisLinearImageRegistration::setInitialTransformation(bisMatrixTransformatio
 float bisLinearImageRegistration::computeValue(std::vector<float>& position)
 {
   this->internalTransformation->setParameterVector(position,1);
-  time_t timer1,timer2;
-  time(&timer1);
   bisImageAlgorithms::resliceImage(this->level_target.get(),this->temp_target.get(),this->internalTransformation.get(),1,0.0);
-  time(&timer2);
-  this->reslicetime+=difftime(timer2,timer1);
+
+
   
   short* weight1_ptr=0,*weight2_ptr=0;
   if (this->use_weights>0)
@@ -112,8 +110,6 @@ float bisLinearImageRegistration::computeValue(std::vector<float>& position)
 	}
     }
 
-  time_t timer3,timer4;
-  time(&timer3);
   this->internalHistogram->weightedFillHistogram(this->level_reference->getImageData(),
 						 this->temp_target->getImageData(),
 						 weight1_ptr,
@@ -123,8 +119,7 @@ float bisLinearImageRegistration::computeValue(std::vector<float>& position)
 						 1, // reset
 						 this->level_dimensions,
 						 this->level_bounds);
-  time(&timer4);
-  this->filltime+=difftime(timer4,timer3);
+
 
   float mv=(float)this->internalHistogram->computeMetric(this->metric);
 
@@ -290,7 +285,7 @@ void bisLinearImageRegistration::run(bisJSONParameterList* plist)
       // true here refers to scale*100.0. Get Initial Parameters from transformation
       this->internalTransformation->storeParameterVector(position,1);
 
-      this->totaltime=0.0,this->reslicetime=0.0,this->filltime=0.0;
+      this->totaltime=0.0;
 
 
       for (int step=numsteps;step>=1;step=step-1)
@@ -314,7 +309,7 @@ void bisLinearImageRegistration::run(bisJSONParameterList* plist)
   time(&timer2);
   std::stringstream strss_final;
   this->totaltime=difftime(timer2,timer1);
-  strss_final << "+ +  Stats : total_time " <<  this->totaltime << " " << " reslice=" << this->reslicetime << " fill=" << this->filltime;
+  strss_final << "+ +  Stats : total_time " <<  this->totaltime;
   this->generateFeedback(strss_final.str());
   this->generateFeedback("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
 

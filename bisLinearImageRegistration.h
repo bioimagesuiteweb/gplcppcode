@@ -84,7 +84,7 @@ protected:
 
 #ifndef DOXYGEN_SKIP  
   // Time things
-  double totaltime,reslicetime,filltime;
+  double totaltime;
 #endif
   
 private:

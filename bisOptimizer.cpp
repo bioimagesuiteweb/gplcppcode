@@ -94,13 +94,20 @@ void bisOptimizer::generateOutput(std::string prefix1,std::string prefix2,std::v
     
     output << " ) " << measure;
   } else {
-    int step=int(this->NumDOF/7);
-    output << this->NumDOF << ":" << step << "(";
+    output << this->NumDOF << ":" << "( range=";
 
-    for (unsigned int ii=0; ii<this->NumDOF; ii=ii+step) {
-      output << position[ii] << " ";
+    float maxp=position[0];
+    float minp=position[0];
+    float sum=position[0];
+    for (unsigned int ii=1; ii<this->NumDOF; ii++) {
+      float v=position[ii];
+      sum+=fabs(v);
+      if (maxp<v)
+        maxp=v;
+      else if (minp>v)
+        minp=v;
     }
-    output << " ) " << measure;
+    output << minp << ":" << maxp << ", meanabs=" << sum/float(this->NumDOF) <<" ) " << measure;
   }
   this->algorithm->generateFeedback(output.str());
 }
