@@ -25,6 +25,7 @@
  Endlicense */
 
 #include "bisNonLinearImageRegistration.h"
+#include "bisApproximateDisplacementField.h"
 #include "bisImageAlgorithms.h"
 #include <sstream>
 #include <time.h>
@@ -35,6 +36,7 @@ bisNonLinearImageRegistration::bisNonLinearImageRegistration(std::string s) : bi
   this->internalTransformation=tmpc;
   this->internalTransformation->identity();
   this->class_name="bisNonLinearImageRegistration";
+  this->hasInitialTransformation=0;
 }
 
 bisNonLinearImageRegistration::~bisNonLinearImageRegistration()
@@ -43,10 +45,10 @@ bisNonLinearImageRegistration::~bisNonLinearImageRegistration()
   this->lastSimilarity=-1.0;
 }
 
-void bisNonLinearImageRegistration::setInitialTransformation(bisMatrixTransformation* initial)
+void bisNonLinearImageRegistration::setInitialTransformation(std::shared_ptr<bisAbstractTransformation> tr) 
 {
-  bisUtil::mat44 m; initial->getMatrix(m);
-  this->internalTransformation->setInitialTransformation(m);
+  this->initialTransformation=tr;
+  this->hasInitialTransformation=1;
 }
   
 
@@ -190,24 +192,48 @@ int bisNonLinearImageRegistration::checkInputParameters(bisJSONParameterList* pl
   return 1;
 }
 
-void bisNonLinearImageRegistration::initializeLevel(int lv,bisAbstractTransformation* initial)
+void bisNonLinearImageRegistration::initializeLevelAndGrid(int lv,int numlevels)
 {
 
-  if (initial==0)
+  std::cout << "+ + I n i t i a l i z i n g  L e v e l " << lv << std::endl;
+
+  if (lv==numlevels && this->hasInitialTransformation)
     {
-      std::cout << "Using current internal Transformation" << " " << this->internalTransformation->getNumberOfGridTransformations() << " "<< std::endl;
+      // If this is the lowest resolution we need to figure out how to handle internal
+
+      int islinear=this->initialTransformation->isLinear();
       
-      bisAbstractImageRegistration::initializeLevel(lv,this->internalTransformation.get());
-    }
-  else
-    {
-      bisAbstractImageRegistration::initializeLevel(lv,initial);
+      std::cout << "+ + \t we have an initial transformation, linear=" << islinear << std::endl;
+      
+      if (islinear==1) {
+        // If it is linear, we are happy no big deal just copy its
+        std::cout << "+ + \t this is a pure linear transformation " << std::endl;
+        bisMatrixTransformation* linear=(bisMatrixTransformation*)(this->initialTransformation.get());
+        bisUtil::mat44 m; linear->getMatrix(m);
+        linear->printSelf();
+        this->internalTransformation->setInitialTransformation(m);
+      } else if (islinear == -1) {
+        std::cout << "+ + \t this is a combo transformation " << std::endl;
+        bisComboTransformation* in=(bisComboTransformation*)(this->initialTransformation.get());
+        bisUtil::mat44 m; in->getInitialTransformation(m);
+        bisUtil::printMatrix(m,"linear component");
+        this->internalTransformation->setInitialTransformation(m);
+      }
     }
 
+
+  bisAbstractImageRegistration::initializeLevel(lv,this->internalTransformation.get());
+
+
+
+
+  
   
   std::unique_ptr<bisSimpleImage<short> > tmp(new bisSimpleImage<short>(this->name+":part_temp_target_image"));
   this->part_temp_target=std::move(tmp);
   this->part_temp_target->copyStructure(this->level_reference.get());
+
+
 
   float cps=this->internalParameters->getFloatValue("cps",20.0);
   float rate=this->internalParameters->getFloatValue("cpsrate",2.0);
@@ -240,6 +266,49 @@ void bisNonLinearImageRegistration::initializeLevel(int lv,bisAbstractTransforma
   std::shared_ptr<bisGridTransformation> tmp_g(new bisGridTransformation(strss.str()));
   this->currentGridTransformation=std::move(tmp_g);
   this->currentGridTransformation->initializeGrid(this->current_dim,this->current_cps,grid_ori,1);
+
+
+  // Do we need to approximate the grid
+  if (lv==numlevels && this->hasInitialTransformation)
+    {
+      
+      int islinear=this->initialTransformation->isLinear();
+      if (islinear == -1)
+        {
+          // We have a combo
+          bisComboTransformation* initial=(bisComboTransformation*)(this->initialTransformation.get());
+          
+          // store this for now
+          bisUtil::mat44 oldlinear; initial->getInitialTransformation(oldlinear);
+          
+          std::unique_ptr<bisMatrixTransformation> ident(new bisMatrixTransformation);
+          ident->identity();
+          initial->setInitialTransformation(ident.get());
+          
+          // Compute the displacement field from initial
+          std::unique_ptr< bisSimpleImage<float> > disp_field(initial->computeDisplacementField(dim_ref,spa_ref));
+          
+          // Approximate it
+          std::unique_ptr<bisApproximateDisplacementField> reg(new bisApproximateDisplacementField("approx"));
+          
+          std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
+          std::string jsonstring="{ \"inverse\" : 0, \"levels\" : 2 \"resolution\" : 1, \"lambda\" : 0.1, \"iterations\" : 10 }";
+          if (!params->parseJSONString(jsonstring.c_str())) {
+            std::cerr << "Something is very wrong" << std::endl;
+            return;
+          }
+          
+          std::cout << "-------------------------------" << std::endl;
+          std::cout << "--- Approximating Initial Transformation " << std::endl;
+          std::cout << "-------------------------------" << std::endl;
+          params->print("from runApproximateDisplacementField","_____");
+          reg->run(disp_field.get(),this->currentGridTransformation.get(),params.get());
+          std::cout << "-------------------------------" << std::endl;
+          initial->setInitialTransformation(oldlinear);
+        }
+    }
+
+
 }
 
 
@@ -279,7 +348,7 @@ void bisNonLinearImageRegistration::run(bisJSONParameterList* plist)
       strss2 << "+ +  Beginning to compute  n o n l i n e a r  registration at level=" << level << ", numsteps=" << numsteps << ", tolerance=" << tolerance;
       this->generateFeedback2(strss2.str());
       this->generateFeedback2("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
-      this->initializeLevel(level);
+      this->initializeLevelAndGrid(level,numlevels);
 
       this->generateFeedback2("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
       float spa[3]; this->level_reference->getImageSpacing(spa);

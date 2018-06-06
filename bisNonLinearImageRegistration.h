@@ -55,7 +55,7 @@ class bisNonLinearImageRegistration : public bisAbstractImageRegistration,bisGri
   /** Set Initial transformation
    * @param initial the initial matrix
    */
-  void setInitialTransformation(bisMatrixTransformation* initial);
+  void setInitialTransformation(std::shared_ptr<bisAbstractTransformation> tr);
 
   // Optimizer Stuff
   virtual float computeValue(std::vector<float>& position);
@@ -92,7 +92,7 @@ protected:
   virtual int checkInputParameters(bisJSONParameterList* plist);
 
   // Initialize Level
-  virtual void initializeLevel(int lv,bisAbstractTransformation* initial=0);
+  virtual void initializeLevelAndGrid(int lv,int numlevels);
   
 
 #ifndef DOXYGEN_SKIP  
@@ -117,6 +117,11 @@ protected:
   /** Last smoothness **/
   float lastSmoothness;
   
+
+  // Initial Transformation
+  /** The reference image */
+  std::shared_ptr<bisAbstractTransformation > initialTransformation;
+  int hasInitialTransformation;
 
 private:
 
