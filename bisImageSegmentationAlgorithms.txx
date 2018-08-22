@@ -683,7 +683,7 @@ namespace bisImageSegmentationAlgorithms {
     
     short* idata=input->getData();
     short* odata=output->getData();
-    int numvoxels=label_image->getLength();
+    int numvoxels=output->getLength();
     for (int i=0;i<numvoxels;i++)
       odata[i]=idata[i];
 

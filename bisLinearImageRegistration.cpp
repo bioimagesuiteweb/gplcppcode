@@ -206,6 +206,8 @@ int bisLinearImageRegistration::checkInputParameters(bisJSONParameterList* plist
   }
 
   this->internalParameters->setIntValue("mode",mode);
+
+  this->internalParameters->setBooleanValue("centeronrefonly",plist->getBooleanValue("centeronrefonly",0));
   if (this->enable_feedback)
     this->internalParameters->print("Fixed Parameters prior to running Linear","+ + + ");
   return 1;
@@ -217,6 +219,8 @@ int bisLinearImageRegistration::checkInputParameters(bisJSONParameterList* plist
 void bisLinearImageRegistration::run(bisJSONParameterList* plist)
 {
 
+  //  plist->print("Unfixd Parameters","+ + + ");
+  
   this->checkInputParameters(plist);
 
   this->generateFeedback("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
@@ -231,6 +235,7 @@ void bisLinearImageRegistration::run(bisJSONParameterList* plist)
   int optimization=this->internalParameters->getIntValue("optimization");
   int iterations=this->internalParameters->getIntValue("iterations");
   float tolerance=this->internalParameters->getFloatValue("tolerance",0.001f);
+  int centeronrefonly=this->internalParameters->getBooleanValue("centeronrefonly",0);
   int mode=this->internalParameters->getIntValue("mode",0);
   int initial_mode=0;
   if (mode>3)
@@ -252,7 +257,7 @@ void bisLinearImageRegistration::run(bisJSONParameterList* plist)
     {
       strss.clear();
       std::stringstream strss2;
-      strss2 << "+ +  Beginning to compute  l i n e a r  registration at level=" << level << ", numsteps=" << numsteps << ", tolerance=" << tolerance;
+      strss2 << "+ +  Beginning to compute  l i n e a r  registration at level=" << level << ", numsteps=" << numsteps << ", tolerance=" << tolerance << " centeronrefonly=" << centeronrefonly;
       this->generateFeedback(strss2.str());
       this->generateFeedback("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
       this->initializeLevel(level);
@@ -263,8 +268,16 @@ void bisLinearImageRegistration::run(bisJSONParameterList* plist)
 	  float spa_ref[3]; level_reference->getImageSpacing(spa_ref);
 	  int dim_trg[3]; level_target->getImageDimensions(dim_trg);
 	  float spa_trg[3]; level_target->getImageSpacing(spa_trg);
-	  this->internalTransformation->setShifts(dim_ref,spa_ref,dim_trg,spa_trg);
-	}
+          if (centeronrefonly) {
+            this->generateFeedback("+ + + + +");
+            this->generateFeedback("+ + + + + Shifting Based on reference only ");
+            this->generateFeedback("+ + + + +");
+            this->internalTransformation->setShifts(dim_ref,spa_ref,dim_ref,spa_ref);
+          }
+          else {
+            this->internalTransformation->setShifts(dim_ref,spa_ref,dim_trg,spa_trg);
+          }
+        }
 
       this->generateFeedback("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
       float spa[3]; this->level_reference->getImageSpacing(spa);
