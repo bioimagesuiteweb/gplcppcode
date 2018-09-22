@@ -53,7 +53,7 @@ class bisNonLinearImageRegistration : public bisAbstractImageRegistration,bisGri
   virtual void run(bisJSONParameterList* plist);
   
   /** Set Initial transformation
-   * @param initial the initial matrix
+   * @param tr the initial transformation
    */
   void setInitialTransformation(std::shared_ptr<bisAbstractTransformation> tr);
 
@@ -88,21 +88,26 @@ protected:
   /** A temp image to reslice in part into during optimization */
   std::unique_ptr<bisSimpleImage<short> > part_temp_target;
   
-  // Check Params (basically mode of transformation)
+  /** Check Params for validity
+   * @param plist the parameter list to check
+   */
   virtual int checkInputParameters(bisJSONParameterList* plist);
 
-  // Initialize Level
+  /** Initialize Multi Resolution Level and the Grid Transformation 
+   * @param lv the level
+   * @param numlevels the number of levels
+   */
   virtual void initializeLevelAndGrid(int lv,int numlevels);
 
   /** Approximate Transformation with Grid
    * @param dispfield the displacement field
-   * @param grid the grid to fit
+   * @param newgrd the grid to fit
+   * @param fast whther to do a fast or slow fitting
    */
   virtual void approximateDisplacementField(bisSimpleImage<float>* dispfield,bisGridTransformation* newgrd,int fast=0);
     
   /** Compute a displacement field to fit later given a current transformation
-   * @param dispfield the displacement field
-   * @param spa the resolution
+   * @param old the input transformation
    * @returns the displacement field
    */
   std::unique_ptr<bisSimpleImage<float> > computeDisplacementField(bisAbstractTransformation* old);
@@ -134,9 +139,10 @@ protected:
   float lastSmoothness;
   
 
-  // Initial Transformation
-  /** The reference image */
+  /** The initial Transformation */
   std::shared_ptr<bisAbstractTransformation > initialTransformation;
+
+  /** A flag to signify whether we have an initial transformation */
   int hasInitialTransformation;
 
 private:
