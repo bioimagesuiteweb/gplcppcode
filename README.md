@@ -1,3 +1,7 @@
+![Logo](https://bioimagesuiteweb.github.io/bisweb-manual/bisweb_newlogo_small.png)
+
+---
+
 This repository contains a plugin for
 [BioImage Suite Web](https://github.com/bioimagesuiteweb/bisweb). These files
 are released under the GPL v2.
