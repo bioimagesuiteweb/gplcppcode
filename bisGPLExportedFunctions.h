@@ -54,7 +54,7 @@ extern "C" {
    * @param debug if > 0 print debug messages
    * @returns a pointer to a serialized vector or matrix depending on the value of return_vector
    */
-  // BIS: { 'runLinearRegistrationWASM', 'bisLinearTransformation', [ 'bisImage', 'bisImage', 'bisLinearTransformation_opt', 'ParamObj', 'debug' ] } 
+  // BIS: { 'runLinearRegistrationWASM', 'bisLinearTransformation', [ 'bisImage', 'bisImage', 'bisLinearTransformation_opt', 'ParamObj', 'debug' ], {"checkorientation" : "python matlab"} } 
   BISEXPORT  unsigned char*  runLinearRegistrationWASM(unsigned char* reference,
 						       unsigned char* target,
 						       unsigned char* initial_xform,
@@ -70,7 +70,7 @@ extern "C" {
    * @param debug if > 0 print debug messages
    * @returns a pointer to a serialized combo transformation (bisComboTransformation)
    */
-  // BIS: { 'runNonLinearRegistrationWASM', 'bisComboTransformation', [ 'bisImage', 'bisImage', 'bisLinearTransformation_opt', 'ParamObj', 'debug' ] } 
+  // BIS: { 'runNonLinearRegistrationWASM', 'bisComboTransformation', [ 'bisImage', 'bisImage', 'bisLinearTransformation_opt', 'ParamObj', 'debug' ], {"checkorientation" : "python matlab"}  } 
   BISEXPORT unsigned char* runNonLinearRegistrationWASM(unsigned char* reference,
 							unsigned char* target,
 							unsigned char* initial_xform,
