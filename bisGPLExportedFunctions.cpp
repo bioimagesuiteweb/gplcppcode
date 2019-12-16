@@ -699,3 +699,163 @@ BISEXPORT unsigned char* computeDTIColorMapImageWASM(unsigned char* input_ptr,
   
   return output->releaseAndReturnRawArray();
 }
+
+
+
+
+    /** runWeighted Linear Image Registration using \link bisLinearImageRegistration  \endlink
+   * @param reference serialized reference image as unsigned char array 
+   * @param target    serialized target image as unsigned char array 
+   * @param ref_weight  serialized reference weight image as unsigned char array 
+   * @param targ_weight  serialized target weight image as unsigned char array 
+   * @param initial_xform serialized initial transformation as unsigned char array 
+   * @param jsonstring the parameter string for the algorithm including return_vector which if true returns a length-28 vector
+   * containing the 4x4 matrix and the 12 transformation parameters
+   * @param debug if > 0 print debug messages
+   * @returns a pointer to a serialized vector or matrix depending on the value of return_vector
+   */
+  // BIS: { 'runWeightedLinearRegistrationWASM', 'bisLinearTransformation', [ 'bisImage', 'bisImage', 'bisImage', 'bisImage_opt', 'bisLinearTransformation_opt', 'ParamObj', 'debug' ], {"checkorientation" : "python matlab"} } 
+unsigned char*  runWeightedLinearRegistrationWASM(unsigned char* reference_ptr,
+                                                  unsigned char* target_ptr,
+                                                  unsigned char* reference_weight_ptr,
+                                                  unsigned char* target_weight_ptr,
+                                                  unsigned char* initial_ptr,
+                                                  const char* jsonstring,
+                                                  int debug)
+{
+  if (debug)
+    std::cout << "_____ Beginning runWeightedLinearRegistrationJSON" << std::endl;
+  
+  std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
+  if (!params->parseJSONString(jsonstring))
+    return 0;
+
+  int return_vector=params->getBooleanValue("return_vector",0);
+  
+  //  if(debug)
+  //    params->print("from runWeightedLinearRegistrationJSON","_____");
+
+  std::shared_ptr<bisSimpleImage<float> > reference_image(new bisSimpleImage<float>("reference_image_json"));
+  if (!reference_image->linkIntoPointer(reference_ptr))
+    return 0;
+  
+  std::shared_ptr<bisSimpleImage<float> > target_image(new bisSimpleImage<float>("target_image_json"));
+  if (!target_image->linkIntoPointer(target_ptr))
+    return 0;
+
+  std::shared_ptr<bisSimpleImage<short> > reference_weight_image(new bisSimpleImage<short>("reference_weight_json"));
+  if (!reference_weight_image->linkIntoPointer(reference_weight_ptr))
+    return 0;
+
+  
+  std::unique_ptr<bisMatrixTransformation> initial_transformation(new bisMatrixTransformation("parse_initial"));
+  initial_transformation->identity();
+  
+  std::unique_ptr<bisSimpleMatrix<float> > initial_matrix(new bisSimpleMatrix<float>("initial_matrix_json"));
+  if (initial_ptr!=0)
+    {
+      if (!initial_matrix->linkIntoPointer(initial_ptr))
+	return 0;
+      if (!initial_transformation->setSimpleMatrix(initial_matrix.get()))
+	return 0;
+    }
+
+  std::unique_ptr<bisLinearImageRegistration> reg(new bisLinearImageRegistration("linear registration"));
+  reg->setReferenceImage(reference_image);
+  reg->setTargetImage(target_image);
+  reg->setReferenceWeightImage(reference_weight_image);
+  if (target_weight_ptr!=0) {
+    std::shared_ptr<bisSimpleImage<short> > target_weight_image(new bisSimpleImage<short>("target_weight_json"));
+    if (!target_weight_image->linkIntoPointer(reference_weight_ptr))
+      return 0;
+    reg->setTargetWeightImage(target_weight_image);
+  }
+  reg->setInitialTransformation(initial_transformation.get());
+  reg->run(params.get());
+  
+  if (return_vector==0)
+    {
+      std::unique_ptr<bisSimpleMatrix<float> > output=reg->getOutputMatrix();
+      bisUtil::mat44 m; output->exportMatrix(m);
+      return output->releaseAndReturnRawArray();
+    }
+
+  std::unique_ptr<bisSimpleVector<float> > output=reg->getTransformationParameterVector();
+  int length=output->getLength();
+
+  Eigen::MatrixXf outmat=Eigen::MatrixXf::Zero(length,1);
+  for (int i=0;i<length;i++)
+    outmat(i,0)=output->getData()[i];
+  return bisEigenUtil::serializeAndReturn(outmat,"param_vector");
+
+
+}
+  
+  
+/** runWeighted Non Linear Image Registration using \link bisNonLinearImageRegistration  \endlink
+ * @param reference serialized reference image as unsigned char array 
+ * @param target    serialized target image as unsigned char array 
+ * @param ref_weight  serialized reference weight image as unsigned char array 
+ * @param targ_weight  serialized target weight image as unsigned char array 
+ * @param initial_xform serialized initial transformation as unsigned char array 
+ * @param jsonstring the parameter string for the algorithm 
+ * @param debug if > 0 print debug messages
+ * @returns a pointer to a serialized combo transformation (bisComboTransformation)
+ */
+// BIS: { 'runWeightedNonLinearRegistrationWASM', 'bisComboTransformation', [ 'bisImage', 'bisImage', 'bisImage', 'bisImage_opt', 'bisLinearTransformation_opt', 'ParamObj', 'debug' ], {"checkorientation" : "python matlab"}  } 
+unsigned char* runWeightedNonLinearRegistrationWASM(unsigned char* reference,
+                                                    unsigned char* target,
+                                                    unsigned char* reference_weight_ptr,
+                                                    unsigned char* target_weight_ptr,
+                                                    unsigned char* initial_ptr,
+                                                    const char* jsonstring,
+                                                    int debug)
+{
+
+  if (debug)
+    std::cout << "_____ Beginning runWeightedNonLinearRegistrationJSON" << std::endl;
+  
+  std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
+  if (!params->parseJSONString(jsonstring))
+    return 0;
+
+  //  if(debug)
+  //    params->print("from runWeightedNonLinearRegistrationJSON","_____");
+
+  std::shared_ptr<bisSimpleImage<float> > reference_image(new bisSimpleImage<float>("reference_image_json"));
+  if (!reference_image->linkIntoPointer(reference))
+    return 0;
+  
+  std::shared_ptr<bisSimpleImage<float> > target_image(new bisSimpleImage<float>("target_image_json"));
+  if (!target_image->linkIntoPointer(target))
+    return 0;
+
+  std::shared_ptr<bisSimpleImage<short> > reference_weight_image(new bisSimpleImage<short>("reference_weight_json"));
+  if (!reference_weight_image->linkIntoPointer(reference_weight_ptr))
+    return 0;
+
+
+
+  std::unique_ptr<bisNonLinearImageRegistration> reg(new bisNonLinearImageRegistration("nonlinear"));
+  reg->setReferenceImage(reference_image);
+  reg->setTargetImage(target_image);
+  reg->setReferenceWeightImage(reference_weight_image);
+  if (target_weight_ptr!=0) {
+    std::shared_ptr<bisSimpleImage<short> > target_weight_image(new bisSimpleImage<short>("target_weight_json"));
+    if (!target_weight_image->linkIntoPointer(reference_weight_ptr))
+      return 0;
+    reg->setTargetWeightImage(target_weight_image);
+  }
+
+  if (initial_ptr) {
+    std::shared_ptr<bisAbstractTransformation> initial_transformation=bisDataObjectFactory::deserializeTransformation(initial_ptr,"initialxform");
+    reg->setInitialTransformation(initial_transformation);
+  }
+  reg->run(params.get());
+
+  std::shared_ptr<bisComboTransformation> output(reg->getOutputTransformation());
+  unsigned char* pointer=output->serialize();
+  
+ 
+  return pointer;
+}

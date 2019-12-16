@@ -187,6 +187,47 @@ extern "C" {
 
 
 
+    /** runWeighted Linear Image Registration using \link bisLinearImageRegistration  \endlink
+   * @param reference serialized reference image as unsigned char array 
+   * @param target    serialized target image as unsigned char array 
+   * @param ref_weight  serialized reference weight image as unsigned char array 
+   * @param targ_weight  serialized target weight image as unsigned char array 
+   * @param initial_xform serialized initial transformation as unsigned char array 
+   * @param jsonstring the parameter string for the algorithm including return_vector which if true returns a length-28 vector
+   * containing the 4x4 matrix and the 12 transformation parameters
+   * @param debug if > 0 print debug messages
+   * @returns a pointer to a serialized vector or matrix depending on the value of return_vector
+   */
+  // BIS: { 'runWeightedLinearRegistrationWASM', 'bisLinearTransformation', [ 'bisImage', 'bisImage', 'bisImage', 'bisImage_opt', 'bisLinearTransformation_opt', 'ParamObj', 'debug' ], {"checkorientation" : "python matlab"} } 
+  BISEXPORT  unsigned char*  runWeightedLinearRegistrationWASM(unsigned char* reference,
+                                                               unsigned char* target,
+                                                               unsigned char* reference_weight,
+                                                               unsigned char* target_weight,
+                                                               unsigned char* initial_xform,
+                                                               const char* jsonstring,
+                                                               int debug);
+  
+  
+  /** runWeighted Non Linear Image Registration using \link bisNonLinearImageRegistration  \endlink
+   * @param reference serialized reference image as unsigned char array 
+   * @param target    serialized target image as unsigned char array 
+   * @param ref_weight  serialized reference weight image as unsigned char array 
+   * @param targ_weight  serialized target weight image as unsigned char array 
+   * @param initial_xform serialized initial transformation as unsigned char array 
+   * @param jsonstring the parameter string for the algorithm 
+   * @param debug if > 0 print debug messages
+   * @returns a pointer to a serialized combo transformation (bisComboTransformation)
+   */
+  // BIS: { 'runWeightedNonLinearRegistrationWASM', 'bisComboTransformation', [ 'bisImage', 'bisImage', 'bisImage', 'bisImage_opt', 'bisLinearTransformation_opt', 'ParamObj', 'debug' ], {"checkorientation" : "python matlab"}  } 
+  BISEXPORT unsigned char* runWeightedNonLinearRegistrationWASM(unsigned char* reference,
+                                                                unsigned char* target,
+                                                                unsigned char* reference_weight,
+                                                                unsigned char* target_weight,
+                                                                unsigned char* initial_xform,
+                                                                const char* jsonstring,
+                                                                int debug);
+
+
 #ifdef __cplusplus
 }
 #endif
