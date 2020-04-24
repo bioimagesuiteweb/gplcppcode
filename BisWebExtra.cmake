@@ -5,6 +5,7 @@ SET(GPLSOURCES
   ${BIS_GPL_DIR}/bisNonLinearImageRegistration.cpp
   ${BIS_GPL_DIR}/bisApproximateDisplacementField.cpp
   ${BIS_GPL_DIR}/bisDTIAlgorithms.cpp
+  ${BIS_GPL_DIR}/bisApproximateLandmarkDisplacementsWithGridTransform.cpp
   ${BIS_GPL_DIR}/bisGPLExportedFunctions.cpp
   )
 
