@@ -8,8 +8,10 @@ SET(GPLSOURCES
   ${BIS_GPL_DIR}/bisApproximateLandmarkDisplacementsWithGridTransform.cpp
   ${BIS_GPL_DIR}/bisRPMCorrespondenceFinder.cpp
   ${BIS_GPL_DIR}/bisGPLExportedFunctions.cpp
+  ${BIS_GPL_DIR}/bisGPLTestFunctions.cpp
   )
 
 SET (GPLHEADERS
   ${BIS_GPL_DIR}/bisGPLExportedFunctions.h
+  ${BIS_GPL_DIR}/bisGPLTestFunctions.h
   )

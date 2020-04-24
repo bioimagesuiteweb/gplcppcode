@@ -259,7 +259,7 @@ int bisRPMCorrespondenceFinder::computeCorrespodnencesICP(bisAbstractTransformat
                                                           float* reference_pts,float* out_ref,float* out_target,float* out_weights,int numref,int debug) {
 
   if (debug)
-    std::cout << "___ computing ICP correspondences for " << numref << " points" << std::endl;
+    std::cout << "___ Computing ICP correspondences for " << numref << " points" << std::endl;
   
   for (int i=0;i<numref;i++) {
     float x[3],y[3],tx[3];
@@ -298,7 +298,7 @@ int bisRPMCorrespondenceFinder::computeCorrespondencesRPM(bisAbstractTransformat
   for (int i=0;i<numtargetpts;i++)
     outlier_targ(i)=0.01;
   
-  std::cout << "_____ Forming Fast Distance Matrix " << numrefpts << "*" << numtargetpts << " temperature=" << temperature << std::endl;
+  std::cout << "_____ Computing RPM Correspondences mode=" << mode << " Points=" << numrefpts << "*" << numtargetpts << " temperature=" << temperature << std::endl;
   float threshold=3*temperature;
   float T2=2.0*temperature*temperature;
   std::vector<int> pointlist;

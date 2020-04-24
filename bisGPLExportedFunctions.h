@@ -127,9 +127,6 @@ extern "C" {
    * @param numdof number of degrees of freedom for simple quadratic function (1 or 2)
    * @returns number of failed tests
    */
-  // BIS: { 'test_optimizer', 'Int', [ 'Int'] } 
-  BISEXPORT int test_optimizer(int numdof);
-
 
   /** Compute DTI Tensor
    * @param input_ptr the images as a serialized array
@@ -227,32 +224,6 @@ extern "C" {
                                                                 const char* jsonstring,
                                                                 int debug);
 
-
-  /** Tests Landmark Approximation BSpline Code
-   * @param reference serialized reference points as  unsigned char array 
-   * @param target    serialized target points as unsigned char array 
-   * @param spacing   grid_spacing for transformation
-   * @param debug  debug flag
-   * @returns a pointer to the updated grid (bisGridTransformation)
-   */
-  // BIS: { 'test_landmarkApproximationWASM', 'Matrix', [ 'Matrix', 'Matrix', 'ParamObj', debug] } 
-  BISEXPORT unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source,
-                                                           unsigned char* in_target,
-                                                           const char* jsonstring,
-                                                           int debug);
-
-  /** Tests RPM Correspondence Finder Code
-   * @param reference serialized reference points as  unsigned char array 
-   * @param target    serialized target points as unsigned char array 
-   * @param ParamObj  JSON string (mode  0=icp 1=mixture, 2=full rpm, temperature, numlandmarks)
-   * @param debug  debug flag
-   * @returns a pointer to a matrix of either ICP closest or match matrix
-   */
-  // BIS: { 'test_rpmCorrespondenceEstimatorWASM', 'Matrix', [ 'Matrix', 'Matrix', 'ParamObj', debug] } 
-  BISEXPORT unsigned char*  test_rpmCorrespondenceEstimatorWASM(unsigned char* in_source,
-                                                                unsigned char* in_target,
-                                                                const char* jsonstring,
-                                                                int debug);
 
   
 #ifdef __cplusplus
