@@ -57,7 +57,7 @@ class bisApproximateLandmarkDisplacementsWithGridTransform : public bisOptimizab
   virtual float run(bisSimpleMatrix<float>* sourceLandmarks,
                     bisSimpleMatrix<float>* targetLandmarks,
                     bisSimpleMatrix<float>* weights,
-                    bisGridTransformation* transformation,bisJSONParameterList* plist);
+                    bisGridTransformation* transformation,bisJSONParameterList* plist,int debug=0);
 
   // Optimizer Stuff
   virtual float computeValue(std::vector<float>& position);
@@ -74,8 +74,6 @@ class bisApproximateLandmarkDisplacementsWithGridTransform : public bisOptimizab
    * @param input string to print */
   virtual void generateFeedback2(std::string input);
 
-  // Get Step Size
-  virtual float getCurrentStepSize();
 
 protected:
 
@@ -128,6 +126,9 @@ protected:
   /** point bins  */
   std::vector<std::vector<int > > gridPointList;
   std::vector<std::vector<float > > gridPointWeight;
+
+  /** debug flag */
+  int debug_flag;
   
 private:
 

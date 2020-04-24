@@ -894,6 +894,10 @@ unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source_ptr,
   weights->allocate(numpoints,1);
   weights->fill(1.0);
 
+  if (debug) 
+    std::cout << "___ Weights Allocated = " << weights->getNumRows() << "*" << weights->getNumCols() << std::endl;
+
+  
   float minc[3],maxc[3];
   float* pts=source->getData();
 
@@ -924,11 +928,19 @@ unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source_ptr,
     spa[ia]=spacing;
   }
 
+  if (debug) {
+    std::cout << "__ Creating Grid " << std::endl;
+    std::cout << "__    min bounds " << minc[0] << "," << minc[1] << "," << minc[2] << std::endl;
+    std::cout << "__    max bounds " << maxc[0] << "," << maxc[1] << "," << maxc[2] << std::endl;
+    std::cout << "__    grid dim   " << dim[0] << "," << dim[1] << "," << dim[2] << std::endl;
+    std::cout << "__    grid spa   " << spa[0] << "," << spa[1] << "," << spa[2] << std::endl;
+    std::cout << "__    grid ori   " << ori[0] << "," << ori[1] << "," << ori[2] << std::endl;
+  }
   std::unique_ptr<bisGridTransformation> grid(new bisGridTransformation());
   grid->initializeGrid(dim,spa,ori,1);
   
   std::unique_ptr<bisApproximateLandmarkDisplacementsWithGridTransform> landmarkFit(new bisApproximateLandmarkDisplacementsWithGridTransform());
-  landmarkFit->run(source.get(),target.get(),weights.get(),grid.get(),params.get());
+  landmarkFit->run(source.get(),target.get(),weights.get(),grid.get(),params.get(),debug);
   
   
   unsigned char* pointer=grid->serialize();
