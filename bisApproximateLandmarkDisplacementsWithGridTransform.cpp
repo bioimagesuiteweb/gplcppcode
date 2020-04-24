@@ -139,8 +139,7 @@ float bisApproximateLandmarkDisplacementsWithGridTransform::computeValueFunction
   float v=sum/float(numpoints);
   if (this->lambda>0.0)
     {
-      float scale=0.01f*(numc);
-      float sm=this->currentGridTransformation->getBendingEnergyAtControlPoint(cp,scale);
+      float sm=this->currentGridTransformation->getBendingEnergyAtControlPoint(cp);
       v+=this->lambda*sm;
     }
   

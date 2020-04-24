@@ -234,7 +234,7 @@ extern "C" {
    * @param spacing   grid_spacing for transformation
    * @returns a pointer to the updated grid (bisGridTransformation)
    */
-  // BIS: { 'test_landmarkApproximationWASM', 'bisGridTransformation', [ 'Matrix', 'Matrix', 'ParamObj', debug] } 
+  // BIS: { 'test_landmarkApproximationWASM', 'Matrix', [ 'Matrix', 'Matrix', 'ParamObj', debug] } 
   BISEXPORT unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source,
                                                            unsigned char* in_target,
                                                            const char* jsonstring,

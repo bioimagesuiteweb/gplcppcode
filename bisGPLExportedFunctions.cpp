@@ -941,8 +941,25 @@ unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source_ptr,
   
   std::unique_ptr<bisApproximateLandmarkDisplacementsWithGridTransform> landmarkFit(new bisApproximateLandmarkDisplacementsWithGridTransform());
   landmarkFit->run(source.get(),target.get(),weights.get(),grid.get(),params.get(),debug);
+
+  if (debug)
+    std::cout << "___ Transforming points " << std::endl;
   
-  
-  unsigned char* pointer=grid->serialize();
-  return pointer;
+  std::unique_ptr<bisSimpleMatrix<float> > output(new bisSimpleMatrix<float>("warped_points_json"));
+  output->zero(source->getNumRows(),3);
+
+  float* srcPts=source->getData();
+  float* outPts=output->getData();
+  for (int i=0;i<source->getNumRows();i++) {
+    float x1[3],x2[3];
+    for (int ia=0;ia<=2;ia++) 
+      x1[ia]=srcPts[i*3+ia];
+    grid->transformPoint(x1,x2);
+    for (int ia=0;ia<=2;ia++)
+      outPts[i*3+ia]=x2[ia];
+  }
+    
+      
+  return output->releaseAndReturnRawArray();
+
 }
