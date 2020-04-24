@@ -37,7 +37,7 @@
 #include "bisLinearImageRegistration.h"
 #include "bisNonLinearImageRegistration.h"
 #include "bisApproximateDisplacementField.h"
-
+#include "bisApproximateLandmarkDisplacementsWithGridTransform.h"
 #include <memory>
 
 
@@ -857,5 +857,80 @@ unsigned char* runWeightedNonLinearRegistrationWASM(unsigned char* reference,
   unsigned char* pointer=output->serialize();
   
  
+  return pointer;
+}
+
+
+unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source_ptr,
+                                               unsigned char* in_target_ptr,
+                                               const char* jsonstring,
+                                               int debug)
+{
+
+  std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
+  if (!params->parseJSONString(jsonstring))
+    return 0;
+
+  float spacing=params->getIntValue("spacing",20.0);
+  if (debug)
+    std::cout << "___ spacing=" << spacing << std::endl;
+
+  std::unique_ptr<bisSimpleMatrix<float> > source(new bisSimpleMatrix<float>("source_points_json"));
+  if (!source->linkIntoPointer(in_source_ptr))
+    return 0;
+
+  if (debug)
+    std::cout << "___ Ref Allocated = " << source->getNumRows() << "*" << source->getNumCols() << std::endl;
+  
+  std::unique_ptr<bisSimpleMatrix<float> > target(new bisSimpleMatrix<float>("target_points_json"));
+  if (!target->linkIntoPointer(in_target_ptr))
+    return 0;
+
+  if (debug) 
+    std::cout << "___ Target Allocated = " << target->getNumRows() << "*" << target->getNumCols() << std::endl;
+
+  int numpoints=source->getNumRows();
+  std::unique_ptr<bisSimpleMatrix<float> > weights(new bisSimpleMatrix<float>("weights_points_json"));
+  weights->allocate(numpoints,1);
+  weights->fill(1.0);
+
+  float minc[3],maxc[3];
+  float* pts=source->getData();
+
+  // Find min and max and create bounds
+  for (int ia=0;ia<=2;ia++) {
+    minc[ia]=pts[ia];
+    maxc[ia]=pts[ia];
+  }
+
+  for (int index=1;index<numpoints;index++) {
+    int offset=index*3;
+    
+    for (int ia=0;ia<=2;ia++) {
+      float p=pts[offset+ia];
+      if (minc[ia]>p) minc[ia]=p;
+      if (maxc[ia]<p) maxc[ia]=p;
+    }
+  }
+
+  int dim[3];
+  float ori[3],spa[3];
+  
+  for (int ia=0;ia<=2;ia++) {
+    float l=maxc[ia]-minc[ia];
+    dim[ia]=int(l/spacing)+1;
+    float l2=(dim[ia]-1)*spacing;
+    ori[ia]=minc[ia]-(l2-l)*0.5;
+    spa[ia]=spacing;
+  }
+
+  std::unique_ptr<bisGridTransformation> grid(new bisGridTransformation());
+  grid->initializeGrid(dim,spa,ori,1);
+  
+  std::unique_ptr<bisApproximateLandmarkDisplacementsWithGridTransform> landmarkFit(new bisApproximateLandmarkDisplacementsWithGridTransform());
+  landmarkFit->run(source.get(),target.get(),weights.get(),grid.get(),params.get());
+  
+  
+  unsigned char* pointer=grid->serialize();
   return pointer;
 }

@@ -37,7 +37,7 @@
  * Implements nonlinear (tensor b-spline) image registration
  */
 
-class bisApproximateLandmarkDisplacementsWithGridTransform : public bisOptimizableAlgorithm,bisGridTransformationOptimizable {
+class bisApproximateLandmarkDisplacementsWithGridTransform : public bisOptimizableAlgorithm {
   
  public:
 

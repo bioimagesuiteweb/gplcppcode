@@ -228,6 +228,19 @@ extern "C" {
                                                                 int debug);
 
 
+  /** Tests Optimizer with numdof = 1 or 2 and all three modes 
+   * @param reference serialized reference points as  unsigned char array 
+   * @param target    serialized target points as unsigned char array 
+   * @param spacing   grid_spacing for transformation
+   * @returns a pointer to the updated grid (bisGridTransformation)
+   */
+  // BIS: { 'test_landmarkApproximationWASM', 'bisGridTransformation', [ 'Matrix', 'Matrix', 'ParamObj', debug] } 
+  BISEXPORT unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source,
+                                                           unsigned char* in_target,
+                                                           const char* jsonstring,
+                                                           int debug);
+
+  
 #ifdef __cplusplus
 }
 #endif
