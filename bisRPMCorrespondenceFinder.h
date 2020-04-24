@@ -64,6 +64,30 @@ public:
                             bisSimpleMatrix<float>* OutputWeights,
                             int debug=0);
 
+  // Sample Points
+  static int samplePoints(bisSimpleMatrix<float>* sourcePoints,
+                          bisSimpleVector<int>* sourceLabels,
+                          int maxnumpoints,
+                          int samplingweight,
+                          bisSimpleMatrix<float>* outputPoints,
+                          bisSimpleVector<int>* outputLabels,
+                          int debug=0);
+
+
+  /** Compute ICP Correspondence */
+  static int computeCorrespodnencesICP(bisAbstractTransformation* Transformation,bisPointLocator* locator,
+                                       float* reference_pts,float* out_ref,float* out_target,float* out_weights,int numref,int debug=0);
+
+  /** Compute And Normalize Distance Matrix */
+  static int computeCorrespondencesRPM(bisAbstractTransformation* Transformation,bisPointLocator* locator,
+                                       Eigen::SparseMatrix<float,Eigen::RowMajor>& M,
+                                       int mode,
+                                       float* reference_pts,int* reference_labels,
+                                       float* target_pts,int* target_labels,
+                                       float* out_ref,float* out_target,float* out_weights,
+                                       float temperature,int numrefpts,int numtargetpts,int debug=0);
+
+
  protected:
   std::shared_ptr<bisSimpleMatrix<float> > SampledReferencePoints;
   bisSimpleMatrix<float>* SampledTargetPoints;
@@ -73,30 +97,8 @@ public:
   int numpoints_target;
   bisPointLocator* locator;
 
-  // Sample Points
-  int samplePoints(bisSimpleMatrix<float>* sourcePoints,
-                   bisSimpleVector<int>* sourceLabels,
-                   int maxnumpoints,
-                   int samplingweight,
-                   bisSimpleMatrix<float>* outputPoints,
-                   bisSimpleVector<int>* outputLabels,
-                   int debug=0);
-
   // Cleanup
   void cleanup();
-
-  /** Compute ICP Correspondence */
-  int computeCorrespodnencesICP(bisAbstractTransformation* Transformation,
-                                float* reference_pts,float* out_ref,float* out_target,float* out_weights,int numref);
-
-  /** Compute And Normalize Distance Matrix */
-  int computeAndNormalizeDistanceMatrix(bisAbstractTransformation* Transformation,
-                                        Eigen::SparseMatrix<float,Eigen::RowMajor>& M,
-                                        int mode,
-                                        float* reference_pts,int* reference_labels,
-                                        float* target_pts,int* target_labels,
-                                        float temperature,int numrefpts,int numtargetpts);
-
 
 private:
 

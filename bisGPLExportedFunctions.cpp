@@ -38,6 +38,8 @@
 #include "bisNonLinearImageRegistration.h"
 #include "bisApproximateDisplacementField.h"
 #include "bisApproximateLandmarkDisplacementsWithGridTransform.h"
+#include "bisRPMCorrespondenceFinder.h"
+#include "bisPointLocator.h"
 #include <memory>
 
 
@@ -871,7 +873,7 @@ unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source_ptr,
   if (!params->parseJSONString(jsonstring))
     return 0;
 
-  float spacing=params->getIntValue("spacing",20.0);
+  float spacing=params->getFloatValue("spacing",20.0);
   if (debug)
     std::cout << "___ spacing=" << spacing << std::endl;
 
@@ -962,4 +964,85 @@ unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source_ptr,
       
   return output->releaseAndReturnRawArray();
 
+}
+
+
+unsigned char*  test_rpmCorrespondenceEstimatorWASM(unsigned char* in_source,
+                                                    unsigned char* in_target,
+                                                    const char* jsonstring,
+                                                    int debug)
+{
+  std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
+  if (!params->parseJSONString(jsonstring))
+    return 0;
+
+  float temperature=params->getFloatValue("temperature",10.0);
+  int mode=params->getIntValue("mode",2);
+  int numlandmarks=params->getIntValue("numpoints",1000);
+    
+  if (debug)
+    std::cout << "___ temperature=" << temperature << " mode=" << mode << " numpoints=" << numlandmarks << std::endl;
+
+  std::unique_ptr<bisSimpleMatrix<float> > source(new bisSimpleMatrix<float>("source_points_json"));
+  if (!source->linkIntoPointer(in_source))
+    return 0;
+
+  if (debug)
+    std::cout << "___ Ref Allocated = " << source->getNumRows() << "*" << source->getNumCols() << std::endl;
+  
+  std::shared_ptr<bisSimpleMatrix<float> > target(new bisSimpleMatrix<float>("target_points_json"));
+  if (!target->linkIntoPointer(in_target))
+    return 0;
+
+  if (debug) 
+    std::cout << "___ Target Allocated = " << target->getNumRows() << "*" << target->getNumCols() << std::endl;
+
+  std::unique_ptr<bisPointLocator> locator(new bisPointLocator());
+  locator->initialize(target,0.2,0);
+
+  std::unique_ptr<bisMatrixTransformation> matrix(new bisMatrixTransformation());
+  matrix->identity();
+
+  int numref=source->getNumRows();
+  int numtarget=target->getNumRows();  
+  std::unique_ptr<bisSimpleMatrix<float> > OutputRefLandmarks(new bisSimpleMatrix<float>());
+  std::unique_ptr<bisSimpleMatrix<float> > OutputTargetLandmarks(new bisSimpleMatrix<float>());
+  std::unique_ptr<bisSimpleMatrix<float> > OutputWeights(new bisSimpleMatrix<float>());
+  OutputRefLandmarks->zero(numref,3);
+  OutputTargetLandmarks->zero(numref,3);
+  OutputWeights->zero(numref,1);
+
+
+  std::unique_ptr<bisSimpleVector<int> > RefLabels(new bisSimpleVector<int>());
+  RefLabels->zero(numref);
+
+  std::unique_ptr<bisSimpleVector<int> > TargLabels(new bisSimpleVector<int>());
+  TargLabels->zero(numtarget);
+  
+
+  if (mode == 0) {
+    bisRPMCorrespondenceFinder::computeCorrespodnencesICP(matrix.get(),locator.get(),
+                                                          source->getData(),
+                                                          OutputRefLandmarks->getData(),
+                                                          OutputTargetLandmarks->getData(),
+                                                          OutputWeights->getData(),
+                                                          numref,debug);
+
+    return OutputTargetLandmarks->releaseAndReturnRawArray();
+  }
+
+
+  Eigen::SparseMatrix<float,Eigen::RowMajor> M(numref,numtarget);
+  bisRPMCorrespondenceFinder::computeCorrespondencesRPM(matrix.get(),locator.get(),M,
+                                                        mode,
+                                                        source->getData(),RefLabels->getData(),
+                                                        target->getData(),TargLabels->getData(),
+                                                        OutputRefLandmarks->getData(),
+                                                        OutputTargetLandmarks->getData(),
+                                                        OutputWeights->getData(),
+                                                        temperature,numref,numtarget,debug);
+
+  //  std::cout << "M=" << M << std::endl;
+  
+  return OutputTargetLandmarks->releaseAndReturnRawArray();
 }
