@@ -327,7 +327,7 @@ unsigned char*  test_rpmSamplingWASM(unsigned char* in_points,
 
   int prefsampling=params->getIntValue("prefsampling",2);
   int numlandmarks=params->getIntValue("numpoints",1000);
-  int returnlabels=params->getIntValue("returnlabels",0);
+
     
   if (debug)
     std::cout << " prefsampling=" << prefsampling << " numpoints=" << numlandmarks << std::endl;
@@ -358,8 +358,5 @@ unsigned char*  test_rpmSamplingWASM(unsigned char* in_points,
                                            out_labels.get(),
                                            debug);
 
-  if (returnlabels)
-    return out_labels->releaseAndReturnRawArray();
-  
   return out_points->releaseAndReturnRawArray();
 }
