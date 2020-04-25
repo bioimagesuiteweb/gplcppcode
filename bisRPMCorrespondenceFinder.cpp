@@ -88,9 +88,9 @@ int bisRPMCorrespondenceFinder::samplePoints(bisSimpleMatrix<float>* inputPoints
     
     int step=1;
     if (maxnumpoints < numrows) {
-      step=int(float(numrows)/float(maxnumpoints)+0.5);
+      step=int(numrows/maxnumpoints);
     }
-    int actualnumpoints=numrows/step
+    int actualnumpoints=numrows/step;
     outputPoints->zero(actualnumpoints,3);
     outputLabels->zero(actualnumpoints);
     float* outpts=outputPoints->getData();
