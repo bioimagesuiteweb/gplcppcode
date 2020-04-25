@@ -314,3 +314,52 @@ unsigned char*  test_rpmCorrespondenceEstimatorWASM(unsigned char* in_source,
   
   return OutputTargetLandmarks->releaseAndReturnRawArray();
 }
+
+unsigned char*  test_rpmSamplingWASM(unsigned char* in_points,
+                                     unsigned char* in_labels,
+                                     const char* jsonstring,
+                                     int debug)
+{
+
+  std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
+  if (!params->parseJSONString(jsonstring))
+    return 0;
+
+  int prefsampling=params->getIntValue("prefsampling",2);
+  int numlandmarks=params->getIntValue("numpoints",1000);
+  int returnlabels=params->getIntValue("returnlabels",0);
+    
+  if (debug)
+    std::cout << " prefsampling=" << prefsampling << " numpoints=" << numlandmarks << std::endl;
+
+  std::unique_ptr<bisSimpleMatrix<float> > points(new bisSimpleMatrix<float>("points_points_json"));
+  if (!points->linkIntoPointer(in_points))
+    return 0;
+
+  if (debug)
+    std::cout << "___ Ref Allocated = " << points->getNumRows() << "*" << points->getNumCols() << std::endl;
+  
+  std::unique_ptr<bisSimpleVector<int> > labels(new bisSimpleVector<int>("labels_points_json"));
+  if (!labels->linkIntoPointer(in_labels))
+    return 0;
+
+  if (debug) 
+    std::cout << "___ Labels Allocated = " << labels->getLength()  << std::endl;
+
+
+  std::unique_ptr<bisSimpleMatrix<float> > out_points(new bisSimpleMatrix<float>("out_points_points_json"));
+  std::unique_ptr<bisSimpleVector<int> > out_labels(new bisSimpleVector<int>("out_labels_points_json"));
+  
+  bisRPMCorrespondenceFinder::samplePoints(points.get(),
+                                           labels.get(),
+                                           numlandmarks,
+                                           prefsampling,
+                                           out_points.get(),
+                                           out_labels.get(),
+                                           debug);
+
+  if (returnlabels)
+    return out_labels->releaseAndReturnRawArray();
+  
+  return out_points->releaseAndReturnRawArray();
+}

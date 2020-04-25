@@ -63,6 +63,19 @@ extern "C" {
                                                                 const char* jsonstring,
                                                                 int debug);
 
+
+  /** Tests RPM Correspondence Sampling Code
+   * @param points serialized points as  unsigned char array 
+   * @param labels serialized label points as unsigned char array 
+   * @param ParamObj  JSON string (numlandmakrs=100, preferentialsampling=1)
+   * @param debug  debug flag
+   * @returns a pointer to the sampled point matrix [ N x 3]
+   */
+  // BIS: { 'test_rpmSamplingWASM', 'Matrix', [ 'Matrix', 'Vector', 'ParamObj', debug] } 
+  BISEXPORT unsigned char*  test_rpmSamplingWASM(unsigned char* in_source,
+                                                 unsigned char* in_target,
+                                                 const char* jsonstring,
+                                                 int debug);
   
 #ifdef __cplusplus
 }

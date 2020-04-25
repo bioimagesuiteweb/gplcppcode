@@ -84,20 +84,23 @@ int bisRPMCorrespondenceFinder::samplePoints(bisSimpleMatrix<float>* inputPoints
       std::cerr << "___      uselabels=" << uselabels << " numrows=" << numrows2 << std::endl;
   }
   
-  if (!uselabels) {
+  if (!uselabels || samplingweight<=1) {
     
     int step=1;
     if (maxnumpoints < numrows) {
-      step=int(numrows/maxnumpoints);
+      step=int(float(numrows)/float(maxnumpoints)+0.5);
     }
-    int actualnumpoints=numrows/step;
+    int actualnumpoints=numrows/step
     outputPoints->zero(actualnumpoints,3);
     outputLabels->zero(actualnumpoints);
     float* outpts=outputPoints->getData();
 
-    if (debug)
-      std::cout << "___ Sampling from " << numrows << " points to " << actualnumpoints << "( step=" << step << ")" << std::endl;
+    if (debug) {
+      std::cout << "___ Sampling from " << numrows << " points to " << actualnumpoints << " (step=" << step << ")" << std::endl;
+      std::cout << "___ Actual Num Points=" << actualnumpoints << std::endl;
+    }
     float* pts=inputPoints->getData();
+    
     for (int i=0;i<actualnumpoints;i++) {
       int index=i*step*3;
       for (int ia=0;ia<=2;ia++)
@@ -141,6 +144,8 @@ int bisRPMCorrespondenceFinder::samplePoints(bisSimpleMatrix<float>* inputPoints
 
   int out_index=0;
 
+  int added[2] = { 0,0 };
+  
   for (int pass=0;pass<=1;pass++) {
     int count=0;
     for (int i=0;i<numrows;i++) {
@@ -153,11 +158,15 @@ int bisRPMCorrespondenceFinder::samplePoints(bisSimpleMatrix<float>* inputPoints
           outpts[out_index*3+ia]=pts[i*3+ia];
         outlabels[out_index]=labels[i];
         out_index=out_index+1;
+        added[pass]=added[pass]+1;
+        if (added[pass] >=  actual[pass])
+          i=numrows;
       }
-      if ( (labels[i]==0 && pass==0) || (labels[i]>0 && pass==1))
+      if ( (labels[i]==0 && pass==0) || (labels[i]>0 && pass==1)) {
         count=count+1;
-      if (count==step[pass])
-        count=0;
+        if (count==step[pass])
+          count=0;
+      }
     }
   }
 
