@@ -110,7 +110,7 @@ protected:
    * @param old the input transformation
    * @returns the displacement field
    */
-  std::unique_ptr<bisSimpleImage<float> > computeDisplacementField(bisAbstractTransformation* old);
+  bisSimpleImage<float>* computeDisplacementField(bisAbstractTransformation* old);
 
   
 #ifndef DOXYGEN_SKIP  

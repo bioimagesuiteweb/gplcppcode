@@ -55,12 +55,12 @@ class bisLinearImageRegistration : public bisAbstractImageRegistration {
   /** Return the transformation parameters 
    * @returns a vector containing the transformation parameters
    */
-  std::unique_ptr<bisSimpleVector<float> > getTransformationParameterVector();
+  bisSimpleVector<float>* getTransformationParameterVector();
 
   /** Return the transformation matrix 
    * @returns a matrix containing the resulting transformation
    */
-  std::unique_ptr<bisSimpleMatrix<float> > getOutputMatrix();
+  bisSimpleMatrix<float>* getOutputMatrix();
 
   /** Set Initial transformation
    * @param initial the initial matrix

@@ -135,10 +135,9 @@ int bisAbstractImageRegistration::prepareImagesForRegistration(float resolution_
       if (this->has_target_weight!=0)
 	this->use_weights=2;
     }
-  
-  this->level_reference=
-    bisImageAlgorithms::prepareImageForRegistration(this->reference.get(),numbins,normalize,resolution_factor,smoothing,intscale,ref_frame,
-						    this->name+":level_ref_image",this->enable_feedback);
+
+  std::unique_ptr<bisSimpleImage<short> > tl(bisImageAlgorithms::prepareImageForRegistration(this->reference.get(),numbins,normalize,resolution_factor,smoothing,intscale,ref_frame,this->name+":level_ref_image",this->enable_feedback));
+  this->level_reference=std::move(tl);
 
 
   if (initial)
@@ -146,20 +145,22 @@ int bisAbstractImageRegistration::prepareImagesForRegistration(float resolution_
       
       int refdim[5]; this->level_reference->getDimensions(refdim);
       float refspa[5]; this->level_reference->getSpacing(refspa);
-      this->level_target=bisImageAlgorithms::prepareAndResliceImageForRegistration(this->target.get(),
-                                                                                   initial,
-                                                                                   refdim,refspa,
-                                                                                   numbins,normalize,
-                                                                                   smoothing,
-                                                                                   intscale,targ_frame,
-                                                                                   this->name+":level_targ_resl_image",
-                                                                                   1);
+      std::unique_ptr<bisSimpleImage<short > > tempt(bisImageAlgorithms::prepareAndResliceImageForRegistration(this->target.get(),
+                                                                                                               initial,
+                                                                                                               refdim,refspa,
+                                                                                                               numbins,normalize,
+                                                                                                               smoothing,
+                                                                                                               intscale,targ_frame,
+                                                                                                               this->name+":level_targ_resl_image",
+                                                                                                               1));
+      this->level_target=std::move(tempt);
     }
   else
     {
-      this->level_target=
-        bisImageAlgorithms::prepareImageForRegistration(this->target.get(),numbins,normalize,resolution_factor,smoothing,intscale,targ_frame,
-                                                        this->name+":level_targ_image",this->enable_feedback);
+      std::unique_ptr<bisSimpleImage<short> > tempt(bisImageAlgorithms::prepareImageForRegistration(this->target.get(),numbins,normalize,
+                                                                                                    resolution_factor,smoothing,intscale,targ_frame,
+                                                                                                    this->name+":level_targ_image",this->enable_feedback));
+      this->level_target=std::move(tempt);
     }
 
   // This resolution factor should be 1 !!!!!!!!11 (do not reslice until later .. i.e. do not reslice!)

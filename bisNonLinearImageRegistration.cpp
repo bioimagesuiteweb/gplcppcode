@@ -195,7 +195,7 @@ int bisNonLinearImageRegistration::checkInputParameters(bisJSONParameterList* pl
 }
 
 // ------------------------------------------------------------------------------------------
-std::unique_ptr<bisSimpleImage<float> > bisNonLinearImageRegistration::computeDisplacementField(bisAbstractTransformation* old)
+bisSimpleImage<float>* bisNonLinearImageRegistration::computeDisplacementField(bisAbstractTransformation* xform)
 {
 
   int dim_ref[3]; level_reference->getImageDimensions(dim_ref);
@@ -209,12 +209,7 @@ std::unique_ptr<bisSimpleImage<float> > bisNonLinearImageRegistration::computeDi
   this->generateFeedback2("++  ");
   std::cout << "+ + Computing displacement field to fit. Dim=" <<newdim[0] << "," << newdim[1] << "," << newdim[2] <<
     ", spa=" << newspa[0] << "," << newspa[1] << "," << newspa[2] << std::endl;
-  std::unique_ptr< bisSimpleImage<float> > disp_field(old->computeDisplacementField(newdim,newspa));
-#ifdef BISWEB_STD_MOVE
-  return disp_field;
-#else
-  return std::move(disp_field);
-#endif
+  return xform->computeDisplacementField(newdim,newspa);
 }
 
 void bisNonLinearImageRegistration::approximateDisplacementField(bisSimpleImage<float>* dispfield,bisGridTransformation* newgrd,int fast)

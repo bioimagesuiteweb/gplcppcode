@@ -52,15 +52,15 @@ bisLinearImageRegistration::~bisLinearImageRegistration()
 
 
   
-std::unique_ptr< bisSimpleMatrix<float> > bisLinearImageRegistration::getOutputMatrix()
+bisSimpleMatrix<float>* bisLinearImageRegistration::getOutputMatrix()
 {
   return this->internalTransformation->getSimpleMatrix("lin_reg_matrix");
 }
 
 
-std::unique_ptr<bisSimpleVector<float> > bisLinearImageRegistration::getTransformationParameterVector()
+bisSimpleVector<float>* bisLinearImageRegistration::getTransformationParameterVector()
 {
-  std::unique_ptr<bisSimpleVector<float> > output(new bisSimpleVector<float>("lin_reg_vector"));
+  bisSimpleVector<float>* output=new bisSimpleVector<float>("lin_reg_vector");
   output->allocate(29);
 
   bisUtil::mat44 m;
@@ -80,12 +80,7 @@ std::unique_ptr<bisSimpleVector<float> > bisLinearImageRegistration::getTransfor
 
   output->getData()[28]=(float)this->internalTransformation->getMode();
 
-#ifdef BISWEB_STD_MOVE
   return output;
-#else
-  return std::move(output);
-#endif
-
 }
 
 

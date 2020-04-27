@@ -130,9 +130,9 @@ namespace bisImageSegmentationAlgorithms {
 
 
 
-  template<class TT> std::unique_ptr<bisSimpleImage<short> > histogramSegmentation(bisSimpleImage<TT>* input, int in_numclasses,float in_maxsigmaratio,
-											   int in_maxiterations, float in_convergence,int in_usevariance,
-											   int in_numbins,int robust, int smoothhisto,int frame,int component)
+  template<class TT> bisSimpleImage<short>* histogramSegmentation(bisSimpleImage<TT>* input, int in_numclasses,float in_maxsigmaratio,
+                                                                  int in_maxiterations, float in_convergence,int in_usevariance,
+                                                                  int in_numbins,int robust, int smoothhisto,int frame,int component)
   {
     std::cout.precision(3);
     std::cout << std::fixed;
@@ -286,7 +286,7 @@ namespace bisImageSegmentationAlgorithms {
 
     
     
-    std::unique_ptr<bisSimpleImage<short > > output(new bisSimpleImage<short>());
+    bisSimpleImage<short >* output=new bisSimpleImage<short>();
     int dim[5]; input->getDimensions(dim);
     float spa[5]; input->getSpacing(spa);
     output->allocate(dim,spa);
@@ -316,11 +316,7 @@ namespace bisImageSegmentationAlgorithms {
 	  }
       }
 
-#ifdef BISWEB_STD_MOVE
     return output;
-#else
-    return std::move(output);
-#endif
   }
 
   // -------------------------------------------------------------------------------------------------------------------------------
@@ -673,16 +669,16 @@ namespace bisImageSegmentationAlgorithms {
 
 
   // label_image -> in,out
-  std::unique_ptr<bisSimpleImage<short> > doObjectMapRegularization(bisSimpleImage<short>* label_image,
-                                                                    float smoothness,
-                                                                    float mrf_convergence_percentage,
-                                                                    int maxiter,int mrf_iter)
+  bisSimpleImage<short>* doObjectMapRegularization(bisSimpleImage<short>* label_image,
+                                                   float smoothness,
+                                                   float mrf_convergence_percentage,
+                                                   int maxiter,int mrf_iter)
   {
     int done=0;
 
 
     std::unique_ptr<bisSimpleImage<short> > input=bisImageAlgorithms::imageExtractFrame<short>(label_image,0,0);
-    std::unique_ptr<bisSimpleImage<short> > output(new bisSimpleImage<short>());
+    bisSimpleImage<short>* output=new bisSimpleImage<short>();
     output->copyStructure(input.get());
     
     short* idata=input->getData();
@@ -715,7 +711,7 @@ namespace bisImageSegmentationAlgorithms {
       {
 	std::cout << std::endl << "___ M a s t e r  I t e r a t i o n :" << iter << "/" << maxiter << std::endl;
 	
-	changed=doMaximizationStep<short>(output.get(),
+	changed=doMaximizationStep<short>(output,
                                           input.get(),
                                           0.0,
                                           means,
@@ -733,12 +729,7 @@ namespace bisImageSegmentationAlgorithms {
         }
       }
     std::cout << std::endl;
-#ifdef BISWEB_STD_MOVE
     return output;
-#else
-    return std::move(output);
-#endif
-
   }
 
 

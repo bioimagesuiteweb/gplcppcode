@@ -69,12 +69,12 @@ namespace bisImageSegmentationAlgorithms {
    * @param component the component of the image to use if 4D or 5D
    * @returns the 3D histogram segmented image
    */
-  template<class TT> std::unique_ptr<bisSimpleImage<short> > histogramSegmentation(bisSimpleImage<TT>* input,
-											   int in_numclasses,float in_maxsigmaratio=0.2,
-											   int in_maxiterations=30, float in_convergence=0.5,int in_usevariance=1,
-											   int in_numbins=128,int robust=1, int smoothhisto=1,
-											   int frame=0,int component=0);
-    
+  template<class TT> bisSimpleImage<short>* histogramSegmentation(bisSimpleImage<TT>* input,
+                                                                  int in_numclasses,float in_maxsigmaratio=0.2,
+                                                                  int in_maxiterations=30, float in_convergence=0.5,int in_usevariance=1,
+                                                                  int in_numbins=128,int robust=1, int smoothhisto=1,
+                                                                  int frame=0,int component=0);
+  
 
 
   /** computes MRF Segmentation --> this uses histogram segmentation to initialize
@@ -107,10 +107,10 @@ namespace bisImageSegmentationAlgorithms {
    * @param internal_iter internal loop iterations (M-step)
    * @returns the output image
    */
-  std::unique_ptr<bisSimpleImage<short> > doObjectMapRegularization(bisSimpleImage<short>* label_image,
-                                                                    float smoothness,
-                                                                    float mrf_convergence_percentage,
-                                                                    int maxiter,int internal_iter);
+  bisSimpleImage<short>* doObjectMapRegularization(bisSimpleImage<short>* label_image,
+                                                   float smoothness,
+                                                   float mrf_convergence_percentage,
+                                                   int maxiter,int internal_iter);
   
 
 

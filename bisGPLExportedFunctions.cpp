@@ -95,12 +95,12 @@ unsigned char* runLinearRegistrationWASM(unsigned char* reference,
   
   if (return_vector==0)
     {
-      std::unique_ptr<bisSimpleMatrix<float> > output=reg->getOutputMatrix();
+      std::unique_ptr<bisSimpleMatrix<float> > output(reg->getOutputMatrix());
       bisUtil::mat44 m; output->exportMatrix(m);
       return output->releaseAndReturnRawArray();
     }
 
-  std::unique_ptr<bisSimpleVector<float> > output=reg->getTransformationParameterVector();
+  std::unique_ptr<bisSimpleVector<float> > output(reg->getTransformationParameterVector());
   int length=output->getLength();
 
   Eigen::MatrixXf outmat=Eigen::MatrixXf::Zero(length,1);
@@ -358,10 +358,10 @@ unsigned char* approximateDisplacementFieldWASM2(unsigned char* dispfield_ptr,
   
   if (debug)
     std::cout << std::endl << "..... Begin Objectmap Regularization" << std::endl;
-  std::unique_ptr<bisSimpleImage<short> > out_image=bisImageSegmentationAlgorithms::doObjectMapRegularization(in_image.get(),
+  std::unique_ptr<bisSimpleImage<short> > out_image(bisImageSegmentationAlgorithms::doObjectMapRegularization(in_image.get(),
                                                                                                               smoothness,
                                                                                                               mrfconvergence,
-                                                                                                              maxiter,internal_iter);
+                                                                                                              maxiter,internal_iter));
   if (debug)
     std::cout << std::endl << "..... Objectmap Regularization done " << std::endl;
 
@@ -519,7 +519,8 @@ BISEXPORT unsigned char* computeDTITensorInvariantsWASM(unsigned char* input_ptr
     }
   else
     {
-      mask_image=bisImageAlgorithms::createMaskImage<float>(in_image.get());
+      std::unique_ptr<bisSimpleImage<unsigned char> >m(bisImageAlgorithms::createMaskImage<float>(in_image.get()));
+      mask_image=std::move(m);
     }
 
   int mode=params->getIntValue("mode",0);
@@ -573,7 +574,8 @@ BISEXPORT unsigned char* computeDTIColorMapImageWASM(unsigned char* input_ptr,
     }
   else
     {
-      mask_image=bisImageAlgorithms::createMaskImage<float>(in_image.get());
+      std::unique_ptr<bisSimpleImage<unsigned char> >m(bisImageAlgorithms::createMaskImage<float>(in_image.get()));
+      mask_image=std::move(m);
     }
   
 
@@ -677,12 +679,12 @@ unsigned char*  runWeightedLinearRegistrationWASM(unsigned char* reference_ptr,
   
   if (return_vector==0)
     {
-      std::unique_ptr<bisSimpleMatrix<float> > output=reg->getOutputMatrix();
+      std::unique_ptr<bisSimpleMatrix<float> > output(reg->getOutputMatrix());
       bisUtil::mat44 m; output->exportMatrix(m);
       return output->releaseAndReturnRawArray();
     }
 
-  std::unique_ptr<bisSimpleVector<float> > output=reg->getTransformationParameterVector();
+  std::unique_ptr<bisSimpleVector<float> > output(reg->getTransformationParameterVector());
   int length=output->getLength();
 
   Eigen::MatrixXf outmat=Eigen::MatrixXf::Zero(length,1);
