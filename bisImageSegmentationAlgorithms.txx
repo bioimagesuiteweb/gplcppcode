@@ -316,7 +316,11 @@ namespace bisImageSegmentationAlgorithms {
 	  }
       }
 
+#ifdef BISWEB_STD_MOVE
+    return output;
+#else
     return std::move(output);
+#endif
   }
 
   // -------------------------------------------------------------------------------------------------------------------------------
@@ -729,7 +733,12 @@ namespace bisImageSegmentationAlgorithms {
         }
       }
     std::cout << std::endl;
+#ifdef BISWEB_STD_MOVE
+    return output;
+#else
     return std::move(output);
+#endif
+
   }
 
 

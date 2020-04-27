@@ -80,7 +80,12 @@ std::unique_ptr<bisSimpleVector<float> > bisLinearImageRegistration::getTransfor
 
   output->getData()[28]=(float)this->internalTransformation->getMode();
 
+#ifdef BISWEB_STD_MOVE
+  return output;
+#else
   return std::move(output);
+#endif
+
 }
 
 

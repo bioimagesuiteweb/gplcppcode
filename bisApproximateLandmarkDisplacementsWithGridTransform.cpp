@@ -112,7 +112,7 @@ float bisApproximateLandmarkDisplacementsWithGridTransform::computeValueFunction
 
   int numpoints=this->sourcePoints->getNumRows();
   int npc=this->gridPointList[cp].size();
-  int numc=this->currentGridTransformation->getNumberOfControlPoints();
+  
   float* inp_pts=this->sourcePoints->getData();
   float* out_pts=this->targetPoints->getData();
   float* wgt_pts=this->sourceWeights->getData();
