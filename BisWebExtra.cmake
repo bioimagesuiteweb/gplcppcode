@@ -7,6 +7,7 @@ SET(GPLSOURCES
   ${BIS_GPL_DIR}/bisDTIAlgorithms.cpp
   ${BIS_GPL_DIR}/bisApproximateLandmarkDisplacementsWithGridTransform.cpp
   ${BIS_GPL_DIR}/bisRPMCorrespondenceFinder.cpp
+  ${BIS_GPL_DIR}/bisLinearRPMRegistration.cpp
   ${BIS_GPL_DIR}/bisGPLExportedFunctions.cpp
   ${BIS_GPL_DIR}/bisGPLTestFunctions.cpp
   )

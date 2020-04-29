@@ -36,11 +36,11 @@
 
 class bisPointLocator;
 
-class bisRPMCorrespondenceFinder  {
+class bisRPMCorrespondenceFinder : public bisObject  {
 
 public:
 
-  bisRPMCorrespondenceFinder();
+  bisRPMCorrespondenceFinder(std::string n);
   virtual ~bisRPMCorrespondenceFinder();
 
   // Description:
@@ -56,12 +56,12 @@ public:
 
   // Description:
   // Estimate Correspondences and Weights
-  int estimateCorrespodence(bisAbstractTransformation* Transformation,
-                            float temperature,
-                            int mode,
-                            bisSimpleMatrix<float>* OutputSourceLandmarks,
-                            bisSimpleMatrix<float>* OutputTargetLandmarks,
-                            bisSimpleMatrix<float>* OutputWeights,
+  int estimateCorrespondence(bisAbstractTransformation* Transformation,
+                             float temperature,
+                             int mode,
+                             bisSimpleMatrix<float>* OutputSourceLandmarks,
+                             bisSimpleMatrix<float>* OutputTargetLandmarks,
+                             bisSimpleMatrix<float>* OutputWeights,
                             int debug=0);
 
   // Sample Points
@@ -110,5 +110,6 @@ private:
                              
   
 };
+
 
 #endif

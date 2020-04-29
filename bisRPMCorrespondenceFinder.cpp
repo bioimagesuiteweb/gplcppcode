@@ -27,13 +27,13 @@
 #include "bisRPMCorrespondenceFinder.h"
 #include "bisPointLocator.h"
 
-bisRPMCorrespondenceFinder::bisRPMCorrespondenceFinder() {
+bisRPMCorrespondenceFinder::bisRPMCorrespondenceFinder(std::string n) : bisObject(n) {
 
   this->locator=NULL;
   this->SampledTargetPoints=NULL;
   this->SampledReferenceLabels=NULL;
   this->SampledTargetLabels=NULL;
-  
+  this->class_name="bisRPMCorrespondenceFinder";
 }
 
 bisRPMCorrespondenceFinder::~bisRPMCorrespondenceFinder() {
@@ -211,13 +211,13 @@ int bisRPMCorrespondenceFinder::initialize(bisSimpleMatrix<float>* ref,
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-int bisRPMCorrespondenceFinder::estimateCorrespodence(bisAbstractTransformation* Transformation,
-                                                      float temperature,
-                                                      int mode,
-                                                      bisSimpleMatrix<float>* OutputRefLandmarks,
-                                                      bisSimpleMatrix<float>* OutputTargetLandmarks,
-                                                      bisSimpleMatrix<float>* OutputWeights,
-                                                      int debug)
+int bisRPMCorrespondenceFinder::estimateCorrespondence(bisAbstractTransformation* Transformation,
+                                                       float temperature,
+                                                       int mode,
+                                                       bisSimpleMatrix<float>* OutputRefLandmarks,
+                                                       bisSimpleMatrix<float>* OutputTargetLandmarks,
+                                                       bisSimpleMatrix<float>* OutputWeights,
+                                                       int debug)
 {
   std::cout << "Debug = " << debug << std::endl;
   
