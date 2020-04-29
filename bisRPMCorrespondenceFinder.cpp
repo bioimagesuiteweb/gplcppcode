@@ -110,7 +110,7 @@ int bisRPMCorrespondenceFinder::samplePoints(bisSimpleMatrix<float>* inputPoints
   }
 
   // Preferential sampling ... harder
-  int count[2];
+  int count[2]={0,0};
   float* pts=inputPoints->getData();
   int* labels=inputLabels->getData();
   
@@ -128,6 +128,7 @@ int bisRPMCorrespondenceFinder::samplePoints(bisSimpleMatrix<float>* inputPoints
     step[1]=int(count[1]/((1.0-fraction)*maxnumpoints));
   }
 
+  
   int actual[2]= { count[0]/step[0], count[1]/step[1]};
   
   int actualnumpoints=actual[0]+actual[1];
