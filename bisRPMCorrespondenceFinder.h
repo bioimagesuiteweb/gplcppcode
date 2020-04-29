@@ -61,7 +61,7 @@ public:
                              int mode,
                              bisSimpleMatrix<float>* OutputSourceLandmarks,
                              bisSimpleMatrix<float>* OutputTargetLandmarks,
-                             bisSimpleMatrix<float>* OutputWeights,
+                             bisSimpleVector<float>* OutputWeights,
                             int debug=0);
 
   // Sample Points

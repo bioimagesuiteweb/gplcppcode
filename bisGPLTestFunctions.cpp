@@ -275,10 +275,10 @@ unsigned char*  test_rpmCorrespondenceEstimatorWASM(unsigned char* in_source,
   int numtarget=target->getNumRows();  
   std::unique_ptr<bisSimpleMatrix<float> > OutputRefLandmarks(new bisSimpleMatrix<float>());
   std::unique_ptr<bisSimpleMatrix<float> > OutputTargetLandmarks(new bisSimpleMatrix<float>());
-  std::unique_ptr<bisSimpleMatrix<float> > OutputWeights(new bisSimpleMatrix<float>());
+  std::unique_ptr<bisSimpleVector<float> > OutputWeights(new bisSimpleVector<float>());
   OutputRefLandmarks->zero(numref,3);
   OutputTargetLandmarks->zero(numref,3);
-  OutputWeights->zero(numref,1);
+  OutputWeights->zero(numref);
 
 
   std::unique_ptr<bisSimpleVector<int> > RefLabels(new bisSimpleVector<int>());

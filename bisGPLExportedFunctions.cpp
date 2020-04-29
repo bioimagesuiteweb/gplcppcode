@@ -36,6 +36,7 @@
 #include "bisLinearImageRegistration.h"
 #include "bisNonLinearImageRegistration.h"
 #include "bisApproximateDisplacementField.h"
+#include "bisLinearRPMRegistration.h"
 #include <memory>
 
 
@@ -762,5 +763,90 @@ unsigned char* runWeightedNonLinearRegistrationWASM(unsigned char* reference,
   
  
   return pointer;
+}
+
+/** run Linear RPM Registration using \link bisLinearImageRegistration  \endlink
+ * @param reference serialized reference points unsigned char array 
+ * @param target    serialized target points as unsigned char array 
+ * @param initial_xform serialized initial transformation as unsigned char array 
+ * @param reference_labels serialized reference labels unsigned char array 
+ * @param target_labels serialized target labels unsigned char array 
+ * @param jsonstring the parameter string for the algorithm  { numLandmarks: 1000, initialTemperature: 10.0, finalTemperature: 1.0,annealRate : 0.93, prefSampling : 1, 
+ *                                                             trnasformMode :2 , correspondenceMode :2 , useCentroids : 1 }
+ * @param debug if > 0 print debug messages
+ * @returns a pointer to a serialized 4x4 matrix
+ */
+unsigned char*  runLinearRPMRegistrationWASM(unsigned char* in_reference,
+                                             unsigned char* in_target,
+                                             unsigned char* initial_ptr,
+                                             unsigned char* in_reference_labels,
+                                             unsigned char* in_target_labels,
+                                             const char* jsonstring,
+                                             int debug)
+{
+
+  std::unique_ptr<bisJSONParameterList> params(new bisJSONParameterList());
+  if (!params->parseJSONString(jsonstring))
+    return 0;
+
+  int numlandmarks=params->getIntValue("numLandmarks",1000);
+  int transformMode=params->getIntValue("transformMode",2);
+  int correspondenceMode=params->getIntValue("correspondenceMode",2);
+  int useCentroids=params->getIntValue("correspondenceMode",1);
+  float initialTemperature=params->getFloatValue("initialTemperature",10.0);
+  float finalTemperature=params->getFloatValue("finalTemperature",10.0);
+  float annealRate=params->getFloatValue("annealRate",10.0);
+  int prefSampling=params->getIntValue("prefSampling",10.0);
+
+  if (debug) {
+    std::cout << " Linear RPM Parameters " << std::endl;
+    std::cout << "          numlandmarks=" << numlandmarks << " transformMode=" << transformMode << " corrMode=" << correspondenceMode << " useCent=" << useCentroids << std::endl;
+    std::cout << "          initialT=" << initialTemperature << " finalT=" << finalTemperature << " annealRate=" << annealRate << " prefSampling=" << prefSampling << std::endl;
+  }
+
+  std::unique_ptr<bisSimpleMatrix<float> > ref_points(new bisSimpleMatrix<float>("ref_points_json"));
+  if (!ref_points->linkIntoPointer(in_reference))
+    return 0;
+  if (debug)
+    std::cout << "___ Ref Points = " << ref_points->getNumRows() << "*" << ref_points->getNumCols() << std::endl;
+
+  std::unique_ptr<bisSimpleMatrix<float> > target_points(new bisSimpleMatrix<float>("target_points_json"));
+  if (!target_points->linkIntoPointer(in_target))
+    return 0;
+  if (debug)
+    std::cout << "___ Target Points = " << target_points->getNumRows() << "*" << target_points->getNumCols() << std::endl;
+
+  std::unique_ptr<bisMatrixTransformation> initial_transformation(new bisMatrixTransformation("parse_initial"));
+  initial_transformation->identity();
+  std::unique_ptr<bisSimpleMatrix<float> > initial_matrix(new bisSimpleMatrix<float>("initial_matrix_json"));
+  if (initial_ptr!=0)
+    {
+      if (!initial_matrix->linkIntoPointer(initial_ptr))
+	return 0;
+      if (!initial_transformation->setSimpleMatrix(initial_matrix.get()))
+	return 0;
+    }
+
+  std::unique_ptr<bisLinearRPMRegistration> RPM(new bisLinearRPMRegistration());
+
+  if (in_reference_labels!=0 && in_target_labels!=0) {
+    // Use labels
+    std::unique_ptr<bisSimpleVector<int> > ref_labels(new bisSimpleVector<int>("ref_labels_json"));
+    std::unique_ptr<bisSimpleVector<int> > targ_labels(new bisSimpleVector<int>("targ_labels_json"));
+    if (!ref_labels->linkIntoPointer(in_reference_labels) || 
+        !targ_labels->linkIntoPointer(in_target_labels) ) {
+      std::cerr << "__ bad labels" << std::endl;
+      return 0;
+    }
+    RPM->initialize(ref_points.get(),target_points.get(),numlandmarks,prefSampling,ref_labels.get(),targ_labels.get(),debug);
+  } else {
+    RPM->initialize(ref_points.get(),target_points.get(),numlandmarks,1,0,0,debug);
+  }
+
+  RPM->run(transformMode,correspondenceMode,initialTemperature,finalTemperature,annealRate,useCentroids,initial_transformation.get(),debug);
+
+  std::unique_ptr<bisSimpleMatrix<float> > output(RPM->getOutputMatrix());
+  bisUtil::mat44 m; output->exportMatrix(m);
+  return output->releaseAndReturnRawArray();
 }
 

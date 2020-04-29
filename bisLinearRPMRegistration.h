@@ -36,7 +36,7 @@ class bisLinearRPMRegistration : public bisRPMCorrespondenceFinder
 {
 public:
 
-  bisLinearRPMRegistration(std::string n);
+  bisLinearRPMRegistration(std::string n="rpm_linear");
   virtual ~bisLinearRPMRegistration();
 
 

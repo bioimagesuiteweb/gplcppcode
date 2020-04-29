@@ -216,7 +216,7 @@ int bisRPMCorrespondenceFinder::estimateCorrespondence(bisAbstractTransformation
                                                        int mode,
                                                        bisSimpleMatrix<float>* OutputRefLandmarks,
                                                        bisSimpleMatrix<float>* OutputTargetLandmarks,
-                                                       bisSimpleMatrix<float>* OutputWeights,
+                                                       bisSimpleVector<float>* OutputWeights,
                                                        int debug)
 {
   std::cout << "Debug = " << debug << std::endl;
@@ -225,18 +225,15 @@ int bisRPMCorrespondenceFinder::estimateCorrespondence(bisAbstractTransformation
   int numtarget=this->SampledTargetPoints->getNumRows();
   if (OutputRefLandmarks->getNumRows()!=numref || OutputRefLandmarks->getNumCols()!=3) 
     OutputRefLandmarks->zero(numref,3);
-  else
-    OutputRefLandmarks->fill(0.0);
+  OutputRefLandmarks->fill(0.0);
   
   if (OutputTargetLandmarks->getNumRows()!=numref || OutputTargetLandmarks->getNumCols()!=3) 
     OutputTargetLandmarks->zero(numref,3);
-  else
-    OutputTargetLandmarks->fill(0.0);
+  OutputTargetLandmarks->fill(0.0);
   
-  if (OutputWeights->getNumRows()!=numref)
-    OutputWeights->zero(numref,1);
-  else
-    OutputTargetLandmarks->fill(0.0);
+  if (OutputWeights->getLength()!=numref)
+    OutputWeights->zero(numref);
+  OutputWeights->fill(1.0);
 
   float* reference_pts=this->SampledReferencePoints->getData();
 

@@ -98,7 +98,7 @@ int bisLinearRPMRegistration::run(int in_transformMode,
 
   bisSimpleMatrix<float>* OutputRefLandmarks=new bisSimpleMatrix<float>();
   bisSimpleMatrix<float>* OutputTargetLandmarks=new bisSimpleMatrix<float>();
-  bisSimpleMatrix<float>* OutputWeights=new bisSimpleMatrix<float>();
+  bisSimpleVector<float>* OutputWeights=new bisSimpleVector<float>();
                                        
   
   float Temperature=InitialTemperature;
@@ -129,6 +129,7 @@ int bisLinearRPMRegistration::run(int in_transformMode,
                                                              OutputTargetLandmarks,
                                                              TransformMode,
                                                              this->Output,
+                                                             OutputWeights,
                                                              debug);
     
     Temperature*=AnnealRate;
