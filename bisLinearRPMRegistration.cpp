@@ -72,8 +72,8 @@ int bisLinearRPMRegistration::run(int in_transformMode,
   
   int TransformMode=bisUtil::irange(in_transformMode,0,2);
   int CorrespondenceMode=bisUtil::irange(in_correspondenceMode,0,2);
-  float FinalTemperature=bisUtil::frange(in_initialTemperature,0.01,1000.0);
-  float InitialTemperature=bisUtil::frange(in_finalTemperature,FinalTemperature,1000.0);
+  float FinalTemperature=bisUtil::frange(in_finalTemperature,0.01,1000.0);
+  float InitialTemperature=bisUtil::frange(in_initialTemperature,FinalTemperature,1000.0);
   float AnnealRate=bisUtil::frange(in_annealRate,0.5,0.999);
   int debug=in_debug;
 

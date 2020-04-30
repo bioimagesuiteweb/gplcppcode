@@ -234,7 +234,7 @@ extern "C" {
    * @param reference_labels serialized reference labels unsigned char array 
    * @param target_labels serialized target labels unsigned char array 
    * @param jsonstring the parameter string for the algorithm  { numLandmarks: 1000, initialTemperature: 10.0, finalTemperature: 1.0,annealRate : 0.93, prefSampling : 1, 
-   *                                                             trnasformMode :2 , correspondenceMode :2 , useCentroids : 1 }
+   *                                                             transformMode :2 , correspondenceMode :2 , useCentroids : 1 }
    * @param debug if > 0 print debug messages
    * @returns a pointer to a serialized 4x4 matrix
    */
