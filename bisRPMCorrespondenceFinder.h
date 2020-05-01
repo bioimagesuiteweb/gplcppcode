@@ -90,7 +90,7 @@ public:
 
  protected:
   std::shared_ptr<bisSimpleMatrix<float> > SampledReferencePoints;
-  bisSimpleMatrix<float>* SampledTargetPoints;
+  std::shared_ptr<bisSimpleMatrix<float> > SampledTargetPoints;
   bisSimpleVector<int>* SampledReferenceLabels;
   bisSimpleVector<int>* SampledTargetLabels;
   int numpoints_ref;

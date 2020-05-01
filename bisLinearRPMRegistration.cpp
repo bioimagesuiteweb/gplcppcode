@@ -84,17 +84,29 @@ int bisLinearRPMRegistration::run(int in_transformMode,
     if (in_useCentroids) {
       float cx[3],cy[3];
       bisPointRegistrationUtils::computeCentroid(this->SampledReferencePoints.get(),cx,debug);
-      bisPointRegistrationUtils::computeCentroid(this->SampledTargetPoints,cy,debug);
-      std::cout << "___ using initial centroid alignment " << std::endl;
-      for (int ia=0;ia<=2;ia++)
+      bisPointRegistrationUtils::computeCentroid(this->SampledTargetPoints.get(),cy,debug);
+      if (debug)
+        std::cout << "___ using initial centroid alignment :";
+      for (int ia=0;ia<=2;ia++) {
         m[ia][3]=cy[ia]-cx[ia];
+        if (debug)
+          std::cout << m[ia][3] << " ";
+      }
+      
+      if (debug)
+        std::cout << std::endl;
+    } else {
+      if (debug)
+        std::cout << "Not using centroids " << std::endl;
     }
     this->Output->setMatrix(m);
   }  else {
+    if (debug)
+      std::cout << "Using Initial Transformation" << std::endl;
     in_initialTransformation->getMatrix(m);
     this->Output->setMatrix(m);
   }
-
+    bisPointRegistrationUtils::printMatrix(this->Output,"Initial Mapping");
 
   bisSimpleMatrix<float>* OutputRefLandmarks=new bisSimpleMatrix<float>();
   bisSimpleMatrix<float>* OutputTargetLandmarks=new bisSimpleMatrix<float>();
@@ -110,13 +122,20 @@ int bisLinearRPMRegistration::run(int in_transformMode,
     std::cout << "___            NumPoints= " << numpoints << " vs " << numpoints2 << " temperatures=" << InitialTemperature << ":" << AnnealRate << ":" << FinalTemperature << std::endl;
   }
 
+  if (debug) {
+    bisPointRegistrationUtils::printTwoPoints(this->SampledReferencePoints.get(),"ref");
+    bisPointRegistrationUtils::printTwoPoints(this->SampledTargetPoints.get(),"target");
+  }
+
+  
+  
   int iteration=0;
   while (Temperature > FinalTemperature) {
     iteration=iteration+1;
     if (debug) 
-      std::cout << "Beginning iteration " << iteration << " t=" << Temperature << std::endl;
-      
-    
+      std::cout << "Beginning iteration " << iteration << " t=" << Temperature << "  TransformMode=" << TransformMode << std::endl;
+
+
     this->estimateCorrespondence(this->Output,
                                  Temperature,
                                  CorrespondenceMode,
@@ -124,13 +143,21 @@ int bisLinearRPMRegistration::run(int in_transformMode,
                                  OutputTargetLandmarks,
                                  OutputWeights,
                                  debug);
-    
+
+    if (debug) {
+      bisPointRegistrationUtils::printJointPoints(OutputRefLandmarks,OutputTargetLandmarks,OutputWeights,"out_ref->targ",117);
+      bisPointRegistrationUtils::printTwoPoints(OutputRefLandmarks,"ref");
+      bisPointRegistrationUtils::printTwoPoints(OutputTargetLandmarks,"targ");
+    }
     bisPointRegistrationUtils::computeLandmarkTransformation(OutputRefLandmarks,
                                                              OutputTargetLandmarks,
                                                              TransformMode,
                                                              this->Output,
                                                              OutputWeights,
                                                              debug);
+
+    if (debug)
+      bisPointRegistrationUtils::printMatrix(this->Output,"End");
     
     Temperature*=AnnealRate;
 

@@ -30,7 +30,8 @@
 bisRPMCorrespondenceFinder::bisRPMCorrespondenceFinder(std::string n) : bisObject(n) {
 
   this->locator=NULL;
-  this->SampledTargetPoints=NULL;
+  this->SampledReferencePoints=0;
+  this->SampledTargetPoints=0;
   this->SampledReferenceLabels=NULL;
   this->SampledTargetLabels=NULL;
   this->class_name="bisRPMCorrespondenceFinder";
@@ -45,8 +46,8 @@ void bisRPMCorrespondenceFinder::cleanup() {
   if (this->locator)
     delete this->locator;
 
-  if (this->SampledTargetPoints)
-    delete this->SampledTargetPoints;
+  this->SampledReferencePoints=0;
+  this->SampledTargetPoints=0;
   
   if (this->SampledReferenceLabels)
     delete this->SampledReferenceLabels;
@@ -190,13 +191,15 @@ int bisRPMCorrespondenceFinder::initialize(bisSimpleMatrix<float>* ref,
   
   std::shared_ptr<bisSimpleMatrix<float> > reft(new bisSimpleMatrix<float>());
   this->SampledReferencePoints=std::move(reft);
+
+  std::shared_ptr<bisSimpleMatrix<float> > targt(new bisSimpleMatrix<float>());
+  this->SampledTargetPoints=std::move(targt);
   
-  this->SampledReferenceLabels=new bisSimpleVector<int>();
-  this->SampledTargetPoints=new bisSimpleMatrix<float>();
   this->SampledTargetLabels=new bisSimpleVector<int>();
+  this->SampledReferenceLabels=new bisSimpleVector<int>();
   
   ok[0]=this->samplePoints(ref,ref_labels,maxnumlandmarks,samplingweight,this->SampledReferencePoints.get(),this->SampledReferenceLabels,debug);
-  ok[1]=this->samplePoints(target,target_labels,maxnumlandmarks,samplingweight,this->SampledTargetPoints,this->SampledTargetLabels,debug);
+  ok[1]=this->samplePoints(target,target_labels,maxnumlandmarks,samplingweight,this->SampledTargetPoints.get(),this->SampledTargetLabels,debug);
 
   if (ok[0] == 0 || ok[1] ==0) {
     std::cerr << "Failed to sample points " << std::endl;
@@ -205,7 +208,7 @@ int bisRPMCorrespondenceFinder::initialize(bisSimpleMatrix<float>* ref,
   }
 
   this->locator=new bisPointLocator();
-  this->locator->initialize(this->SampledReferencePoints,0.1,0);
+  this->locator->initialize(this->SampledTargetPoints,0.1,0);
   return 1;
    
   
@@ -226,25 +229,30 @@ int bisRPMCorrespondenceFinder::estimateCorrespondence(bisAbstractTransformation
   int numtarget=this->SampledTargetPoints->getNumRows();
   if (OutputRefLandmarks->getNumRows()!=numref || OutputRefLandmarks->getNumCols()!=3) 
     OutputRefLandmarks->zero(numref,3);
-  OutputRefLandmarks->fill(0.0);
   
   if (OutputTargetLandmarks->getNumRows()!=numref || OutputTargetLandmarks->getNumCols()!=3) 
     OutputTargetLandmarks->zero(numref,3);
-  OutputTargetLandmarks->fill(0.0);
   
   if (OutputWeights->getLength()!=numref)
     OutputWeights->zero(numref);
-  OutputWeights->fill(1.0);
-
+  
   float* reference_pts=this->SampledReferencePoints->getData();
-
+  
   float* out_ref=OutputRefLandmarks->getData();
   float* out_target=OutputTargetLandmarks->getData();
   float* out_weights=OutputWeights->getData();
   
-  if (mode==0) 
-    return bisRPMCorrespondenceFinder::computeCorrespodnencesICP(Transformation,locator,reference_pts,out_ref,out_target,out_weights,numref,debug);
-
+  if (mode==0) {
+    return bisRPMCorrespondenceFinder::computeCorrespodnencesICP(Transformation,
+                                                                 locator,
+                                                                 reference_pts,
+                                                                 out_ref,
+                                                                 out_target,
+                                                                 out_weights,
+                                                                 numref,
+                                                                 debug);
+  }
+  
   float* target_pts=this->SampledTargetPoints->getData();
   int* reference_labels=this->SampledReferenceLabels->getData();
   int* target_labels=this->SampledTargetLabels->getData();
@@ -257,16 +265,27 @@ int bisRPMCorrespondenceFinder::estimateCorrespondence(bisAbstractTransformation
                                                         out_ref,out_target,out_weights,
                                                         temperature,numref,numtarget,debug);
 
+  
+  
+
 
   return 1;
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-int bisRPMCorrespondenceFinder::computeCorrespodnencesICP(bisAbstractTransformation* Transformation,bisPointLocator* locator,
-                                                          float* reference_pts,float* out_ref,float* out_target,float* out_weights,int numref,int debug) {
+int bisRPMCorrespondenceFinder::computeCorrespodnencesICP(bisAbstractTransformation* Transformation,
+                                                          bisPointLocator* locator,
+                                                          float* reference_pts,
+                                                          float* out_ref,
+                                                          float* out_target,
+                                                          float* out_weights,
+                                                          int numref,
+                                                          int debug) {
 
   if (debug)
     std::cout << "___ Computing ICP correspondences for " << numref << " points" << std::endl;
+
+  int half=int(numref/2);
   
   for (int i=0;i<numref;i++) {
     float x[3],y[3],tx[3];
@@ -280,6 +299,13 @@ int bisRPMCorrespondenceFinder::computeCorrespodnencesICP(bisAbstractTransformat
       out_target[i*3+ia]=y[ia];
       out_weights[i]=1.0;
     }
+
+    if  ( (i==0 || i==half) && debug>0) {
+        std::cout << "Point = " << i << " x=" << x[0] << "," << x[1] << " " << x[2] << " --> ";
+        std::cout << "tx=" << tx[0] << "," << tx[1] << " " << tx[2] << " --> ";
+        std::cout << "y=" << y[0] << "," << y[1] << " " << y[2] << std::endl;
+    }
+    
   }
   return 1;
 }
@@ -322,23 +348,35 @@ int bisRPMCorrespondenceFinder::computeCorrespondencesRPM(bisAbstractTransformat
       Transformation->transformPoint(x,tx);
 
       int db=0;
-      if (row == 7 && debug && mode==1)
+      if (row%117 == 0 && debug)
         db=1;
+
+      if (db) 
+        std::cout << "RPM=" << row << "=" << x[0] << "," << x[1] << "," << x[2] << " --> " << tx[0] << "," << tx[1] << "," << tx[2] << std::endl;
       
-      int nump=locator->getPointsWithinRadius(tx,threshold,pointlist,db);
+      
+
+      int nump=locator->getPointsWithinRadius(tx,threshold,pointlist,0);
+      float thr=threshold;
+      float t2=T2;
+      while (nump<3) {
+        thr=thr*1.5;
+        nump=locator->getPointsWithinRadius(tx,thr,pointlist,0);
+        t2=t2*2.25;
+      }
       for (int i=0;i<nump;i++) {
         int col=pointlist[i];
         if (reference_labels[row] == target_labels[col]) {
           float dist2=0.0;
           for (int ia=0;ia<=2;ia++) 
             dist2+=pow(x[ia]-target_pts[col*3+ia],2.0f);
-          M.coeffRef(row,col)=exp(-dist2/T2);
-          if (  row== 7 && debug)  {
+          M.coeffRef(row,col)=exp(-dist2/t2);
+          /*if (  row== 7 && debug)  {
             std::cout << "M(" << row << "," << col << ")=" << M.coeffRef(row,col) << " dist2=" << dist2 << " threshold=" << threshold << std::endl;
             std::cout << "\t\t " << x[0] << "," << x[1] << "," << x[2] << "-->";
             std::cout << "\t\t " << tx[0] << "," << tx[1] << "," << tx[2] << "-->";
             std::cout << "\t\t " << target_pts[col*3] << "," << target_pts[col*3+1] << "," << target_pts[col*3+2] << std::endl;
-          }
+            }*/
         }
       }
     }
@@ -373,18 +411,18 @@ int bisRPMCorrespondenceFinder::computeCorrespondencesRPM(bisAbstractTransformat
           float v=it.value();
           int row=it.row();   // row index
           int col=it.col();   // col index (here it is equal to k)
-          if ( (row==7 || col==7) && debug)
-            std::cout << "Row=" << row << " Col=" << col << " val=" << v << " k=" << k << std::endl;
+          // if ( (row==7 || col==7) && debug)
+          //std::cout << "Row=" << row << " Col=" << col << " val=" << v << " k=" << k << std::endl;
           
           sum_ref(row)+=v;
           sum_targ(col)+=v;
         }
     }
 
-    if (debug)  {
+    /*if (debug)  {
       std::cout << std::endl << "_______ Row=" << 7 << " sum=" << sum_ref(7) << " col7=" << sum_targ(7) << std::endl;
       std::cout << "____ normalizing rows or columns " << std::endl;
-    }
+      }*/
 
     // Normalize either row or column
     for (int k=0; k<M.outerSize(); ++k) {
@@ -395,8 +433,8 @@ int bisRPMCorrespondenceFinder::computeCorrespondencesRPM(bisAbstractTransformat
           int row=it.row();   // row index
           int col=it.col();   // col index (here it is equal to k)
           
-          if ( (row==7 || col==7) && debug)
-            std::cout << "row=" << row << " col=" << col << " v=" << v << std::endl;
+          //if ( (row==7 || col==7) && debug)
+          //std::cout << "row=" << row << " col=" << col << " v=" << v << std::endl;
           
           if (iteration % 2 == 0) 
             M.coeffRef(row,col)=v/sum_ref(row);
@@ -408,11 +446,11 @@ int bisRPMCorrespondenceFinder::computeCorrespondencesRPM(bisAbstractTransformat
     // Normalize outlier column or row
     if (iteration % 2 == 0) {
       for (int i=0;i<numrefpts;i++) {
-        if (debug && i==7)
-          std::cout << "\t Before normalization outlier=" << outlier_ref(i) << " -->";
+        //if (debug && i==7)
+        //  std::cout << "\t Before normalization outlier=" << outlier_ref(i) << " -->";
         outlier_ref(i)=outlier_ref(i)/sum_ref(i);
-        if (debug && i==7)
-          std::cout << " (after)" << outlier_ref(i) << " (" << sum_ref(i) << ")" << std::endl;
+        //if (debug && i==7)
+        //std::cout << " (after)" << outlier_ref(i) << " (" << sum_ref(i) << ")" << std::endl;
       }
     } else {
       for (int i=0;i<numtargetpts;i++)
@@ -437,22 +475,31 @@ int bisRPMCorrespondenceFinder::computeCorrespondencesRPM(bisAbstractTransformat
         for (int ia=0;ia<=2;ia++) 
           out_target[row*3+ia]+=v*target_pts[col*3+ia];
 
-        if (row==7 && debug) {
+        /*        if (row%117==0 && debug ) {
           std::cout << "Row=" << row << " Col=" << col << " val=" << v << " out_weights[row]=" << out_weights[row] << " k=" << k << std::endl;
           std::cout << "\t Out_target=" << out_target[row*3] << "," << out_target[row*3+1] << "," << out_target[row*3+2] << std::endl;
-        }
+          }*/
       }
   }
-  
-  for (int i=0;i<numrefpts;i++) {
-    for (int ia=0;ia<=2;ia++)  {
-      out_target[i*3+ia]/=out_weights[i];
-    }
-     if (i==7 && debug) {
-       std::cout << "Row=" << i << " w=" << out_weights[i] << " pt=" << out_target[i*3] << "," << out_target[i*3+1] << "," << out_target[i*3+2] << std::endl;
-     }
 
-   
+  for (int i=0;i<numrefpts;i++) {
+      if (out_weights[i]>0.001) {
+        for (int ia=0;ia<=2;ia++)  {
+          out_target[i*3+ia]/=out_weights[i];
+        }
+      } else {
+        out_weights[i]=1e-7;
+        std::cout << " i=" << i << " w=" << out_weights[i] << std::endl;
+        float x[3],tx[3];
+        for (int ia=0;ia<=2;ia++) 
+          x[ia]=reference_pts[i*3+ia];
+        Transformation->transformPoint(x,tx);
+        for (int ia=0;ia<=2;ia++) 
+          out_target[i*3+ia]=tx[ia];
+      }
+      if (i==7 && debug) {
+        std::cout << "Row=" << i << " w=" << out_weights[i] << " pt=" << out_target[i*3] << "," << out_target[i*3+1] << "," << out_target[i*3+2] << std::endl;
+      }
   }
 
   return 1;

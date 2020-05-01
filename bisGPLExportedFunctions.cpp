@@ -792,7 +792,7 @@ unsigned char*  runLinearRPMRegistrationWASM(unsigned char* in_reference,
   int numlandmarks=params->getIntValue("numLandmarks",1000);
   int transformMode=params->getIntValue("transformMode",2);
   int correspondenceMode=params->getIntValue("correspondenceMode",2);
-  int useCentroids=params->getIntValue("correspondenceMode",1);
+  int useCentroids=params->getIntValue("useCentroids",1);
   float initialTemperature=params->getFloatValue("initialTemperature",10.0);
   float finalTemperature=params->getFloatValue("finalTemperature",10.0);
   float annealRate=params->getFloatValue("annealRate",10.0);
@@ -825,6 +825,10 @@ unsigned char*  runLinearRPMRegistrationWASM(unsigned char* in_reference,
 	return 0;
       if (!initial_transformation->setSimpleMatrix(initial_matrix.get()))
 	return 0;
+    }
+  else
+    {
+      initial_transformation=0;
     }
 
   std::unique_ptr<bisLinearRPMRegistration> RPM(new bisLinearRPMRegistration());
