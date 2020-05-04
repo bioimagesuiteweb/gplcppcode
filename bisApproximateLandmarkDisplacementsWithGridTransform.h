@@ -56,7 +56,7 @@ class bisApproximateLandmarkDisplacementsWithGridTransform : public bisOptimizab
    */
   virtual float run(bisSimpleMatrix<float>* sourceLandmarks,
                     bisSimpleMatrix<float>* targetLandmarks,
-                    bisSimpleMatrix<float>* weights,
+                    bisSimpleVector<float>* weights,
                     bisGridTransformation* transformation,bisJSONParameterList* plist,int debug=0);
 
   // Optimizer Stuff
@@ -89,7 +89,7 @@ protected:
   bisSimpleMatrix<float>* targetPoints;
 
   /** the target points  to approximate */
-  bisSimpleMatrix<float>* sourceWeights;
+  bisSimpleVector<float>* sourceWeights;
 
   /** A temp image to store the displacement field during optimization */
   std::unique_ptr<bisSimpleImage<float> > temp_displacement_field;

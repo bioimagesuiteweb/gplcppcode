@@ -319,7 +319,7 @@ void bisApproximateLandmarkDisplacementsWithGridTransform::initializePointLists(
 // Set Parameters and Run
 float bisApproximateLandmarkDisplacementsWithGridTransform::run(bisSimpleMatrix<float>* in_sourceLandmarks,
                                                                 bisSimpleMatrix<float>* in_targetLandmarks,
-                                                                bisSimpleMatrix<float>* in_sourceWeights,
+                                                                bisSimpleVector<float>* in_sourceWeights,
                                                                 bisGridTransformation* transformation,
                                                                 bisJSONParameterList* plist,
                                                                 int dbg)
@@ -336,14 +336,13 @@ float bisApproximateLandmarkDisplacementsWithGridTransform::run(bisSimpleMatrix<
 
   int rows1=this->sourcePoints->getNumRows();
   int rows2=this->targetPoints->getNumRows();
-  int rows3=this->sourceWeights->getNumRows();
+  int rows3=this->sourceWeights->getLength();
 
   int cols1=this->sourcePoints->getNumCols();
   int cols2=this->targetPoints->getNumCols();
-  int cols3=this->sourceWeights->getNumCols();
 
-  if (rows1 < 4 || rows1 != rows2 || rows1 !=rows3 || cols1 !=3  || cols2 !=3 || cols3!=1 ) {
-    std::cerr << "Bad Landmark sets =" << rows1 << "*" << cols1 << " and " << rows2 << "*" << cols2 << " and " << rows3 << "*" << cols3 << std::endl;
+  if (rows1 < 4 || rows1 != rows2 || rows1 !=rows3 || cols1 !=3  || cols2 !=3 ) {
+    std::cerr << "Bad Landmark sets =" << rows1 << "*" << cols1 << " and " << rows2 << "*" << cols2 << " and weights=" << rows3  << std::endl;
     return -1.0;
   }
   this->initializePointLists();

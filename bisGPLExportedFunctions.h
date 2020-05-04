@@ -246,7 +246,29 @@ extern "C" {
                                                           unsigned char* target_labels,
                                                           const char* jsonstring,
                                                           int debug);
-  
+
+
+  /** run NonLinear RPM Registration using \link bisLinearImageRegistration  \endlink
+   * @param reference serialized reference points unsigned char array 
+   * @param target    serialized target points as unsigned char array 
+   * @param initial_xform serialized initial transformation as unsigned char array 
+   * @param reference_labels serialized reference labels unsigned char array 
+   * @param target_labels serialized target labels unsigned char array 
+   * @param jsonstring the parameter string for the algorithm  { numLandmarks: 1000, initialTemperature: 10.0, finalTemperature: 1.0,annealRate : 0.93, prefSampling : 1, 
+   *                                                             correspondenceMode :2 , useCentroids : 1, iterPerTemp: 5 ,
+   *                                                             cpsbegin: 40.0, cpsend:20, smoothnessbegin:0.01, smoothnessend:0.001   }
+   * @param debug if > 0 print debug messages
+   * @returns a pointer to a serialized combo transformation (bisComboTransformation)
+   */
+  // BIS: { 'runNonLinearRPMRegistrationWASM', 'bisComboTransformation', [ 'Matrix', 'Matrix', 'bisLinearTransformation_opt', 'Vector_opt', 'Vector_opt',  'ParamObj', 'debug' ] }
+  BISEXPORT  unsigned char*  runNonLinearRPMRegistrationWASM(unsigned char* reference,
+                                                             unsigned char* target,
+                                                             unsigned char* initial_xform,
+                                                             unsigned char* reference_labels,
+                                                             unsigned char* target_labels,
+                                                             const char* jsonstring,
+                                                             int debug);
+
 
 #ifdef __cplusplus
 }
