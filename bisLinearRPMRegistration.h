@@ -59,6 +59,7 @@ public:
                   int correspondenceMode=2,
                   float initialTemperature=5.0,
                   float finalTemperature=1.0,
+                  int iterationPerTemperature=5,
                   float annealRate=0.93,
                   int useCentroids=1,
                   bisMatrixTransformation* initialTransformation=NULL,

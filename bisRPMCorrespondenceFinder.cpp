@@ -354,30 +354,30 @@ int bisRPMCorrespondenceFinder::computeCorrespondencesRPM(bisAbstractTransformat
       if (db) 
         std::cout << "RPM=" << row << "=" << x[0] << "," << x[1] << "," << x[2] << " --> " << tx[0] << "," << tx[1] << "," << tx[2] << std::endl;
       
-      
-
       int nump=locator->getPointsWithinRadius(tx,threshold,pointlist,0);
-      float thr=threshold;
-      float t2=T2;
-      while (nump<3) {
-        thr=thr*1.5;
-        nump=locator->getPointsWithinRadius(tx,thr,pointlist,0);
-        t2=t2*2.25;
+      if (nump<3) {
+        // If numpoints is small expand threshold to see if we can find more
+        locator->getPointsWithinRadius(tx,threshold*2.0,pointlist,0);
       }
+
+      float sum=0.0;
       for (int i=0;i<nump;i++) {
         int col=pointlist[i];
         if (reference_labels[row] == target_labels[col]) {
           float dist2=0.0;
           for (int ia=0;ia<=2;ia++) 
             dist2+=pow(x[ia]-target_pts[col*3+ia],2.0f);
-          M.coeffRef(row,col)=exp(-dist2/t2);
-          /*if (  row== 7 && debug)  {
-            std::cout << "M(" << row << "," << col << ")=" << M.coeffRef(row,col) << " dist2=" << dist2 << " threshold=" << threshold << std::endl;
-            std::cout << "\t\t " << x[0] << "," << x[1] << "," << x[2] << "-->";
-            std::cout << "\t\t " << tx[0] << "," << tx[1] << "," << tx[2] << "-->";
-            std::cout << "\t\t " << target_pts[col*3] << "," << target_pts[col*3+1] << "," << target_pts[col*3+2] << std::endl;
-            }*/
+          float d=exp(-dist2/T2);
+          M.coeffRef(row,col)=d;
+          sum+=d;
         }
+      }
+
+      // If total sum is too low < 0.001, then stablize using closest point and set its weight to 0.001
+      if (sum<0.001) {
+        float y[3];
+        int nearest=locator->getNearestPoint(tx,y,0);
+        M.coeffRef(row,nearest)=0.001;
       }
     }
     

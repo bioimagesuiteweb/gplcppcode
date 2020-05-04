@@ -59,6 +59,7 @@ int bisLinearRPMRegistration::run(int in_transformMode,
                                   int in_correspondenceMode,
                                   float in_initialTemperature,
                                   float in_finalTemperature,
+                                  int in_iterationPerTemperature,
                                   float in_annealRate,
                                   int in_useCentroids,
                                   bisMatrixTransformation* in_initialTransformation,
@@ -69,7 +70,9 @@ int bisLinearRPMRegistration::run(int in_transformMode,
     std::cerr << "___ bisLinearRPMRegistration not initialized" << std::endl;
     return 0;
   }
-  
+
+
+  int IterationPerTemperature = bisUtil::irange(in_iterationPerTemperature,1,10);
   int TransformMode=bisUtil::irange(in_transformMode,0,2);
   int CorrespondenceMode=bisUtil::irange(in_correspondenceMode,0,2);
   float FinalTemperature=bisUtil::frange(in_finalTemperature,0.01,1000.0);
@@ -130,39 +133,41 @@ int bisLinearRPMRegistration::run(int in_transformMode,
   
   
   int iteration=0;
-  while (Temperature > FinalTemperature) {
-    iteration=iteration+1;
-    if (debug) 
-      std::cout << "Beginning iteration " << iteration << " t=" << Temperature << "  TransformMode=" << TransformMode << std::endl;
-
-
-    this->estimateCorrespondence(this->Output,
-                                 Temperature,
-                                 CorrespondenceMode,
-                                 OutputRefLandmarks,
-                                 OutputTargetLandmarks,
-                                 OutputWeights,
-                                 debug);
-
-    if (debug) {
-      bisPointRegistrationUtils::printJointPoints(OutputRefLandmarks,OutputTargetLandmarks,OutputWeights,"out_ref->targ",117);
-      bisPointRegistrationUtils::printTwoPoints(OutputRefLandmarks,"ref");
-      bisPointRegistrationUtils::printTwoPoints(OutputTargetLandmarks,"targ");
+  int totaliter=int(fabs(log(InitialTemperature/FinalTemperature)/log(AnnealRate))+1.0)*IterationPerTemperature;
+  while (Temperature > FinalTemperature)
+    {
+      for (int it=0;it<IterationPerTemperature;it++) {
+        iteration=iteration+1;
+        if (debug) 
+          std::cout << "Beginning iteration " << iteration << "/" << totaliter << ". Temp=" << Temperature << "  TransformMode=" << TransformMode << std::endl;
+        
+        
+        this->estimateCorrespondence(this->Output,
+                                     Temperature,
+                                     CorrespondenceMode,
+                                     OutputRefLandmarks,
+                                     OutputTargetLandmarks,
+                                     OutputWeights,
+                                     debug);
+        
+        if (debug) {
+          bisPointRegistrationUtils::printJointPoints(OutputRefLandmarks,OutputTargetLandmarks,OutputWeights,"out_ref->targ",117);
+          bisPointRegistrationUtils::printTwoPoints(OutputRefLandmarks,"ref");
+          bisPointRegistrationUtils::printTwoPoints(OutputTargetLandmarks,"targ");
+        }
+        bisPointRegistrationUtils::computeLandmarkTransformation(OutputRefLandmarks,
+                                                                 OutputTargetLandmarks,
+                                                                 TransformMode,
+                                                                 this->Output,
+                                                                 OutputWeights,
+                                                                 debug);
+        
+        if (debug)
+          bisPointRegistrationUtils::printMatrix(this->Output,"End");
+      }
+      Temperature*=AnnealRate;
+      
     }
-    bisPointRegistrationUtils::computeLandmarkTransformation(OutputRefLandmarks,
-                                                             OutputTargetLandmarks,
-                                                             TransformMode,
-                                                             this->Output,
-                                                             OutputWeights,
-                                                             debug);
-
-    if (debug)
-      bisPointRegistrationUtils::printMatrix(this->Output,"End");
-    
-    Temperature*=AnnealRate;
-
-  }
-
 
   delete OutputRefLandmarks;
   delete OutputTargetLandmarks;

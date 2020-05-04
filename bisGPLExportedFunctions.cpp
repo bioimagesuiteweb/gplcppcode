@@ -795,13 +795,14 @@ unsigned char*  runLinearRPMRegistrationWASM(unsigned char* in_reference,
   int useCentroids=params->getIntValue("useCentroids",1);
   float initialTemperature=params->getFloatValue("initialTemperature",10.0);
   float finalTemperature=params->getFloatValue("finalTemperature",10.0);
+  int iterPerTemp=params->getIntValue("iterPerTemp",5);
   float annealRate=params->getFloatValue("annealRate",10.0);
   int prefSampling=params->getIntValue("prefSampling",10.0);
 
   if (debug) {
     std::cout << " Linear RPM Parameters " << std::endl;
     std::cout << "          numlandmarks=" << numlandmarks << " transformMode=" << transformMode << " corrMode=" << correspondenceMode << " useCent=" << useCentroids << std::endl;
-    std::cout << "          initialT=" << initialTemperature << " finalT=" << finalTemperature << " annealRate=" << annealRate << " prefSampling=" << prefSampling << std::endl;
+    std::cout << "          initialT=" << initialTemperature << " finalT=" << finalTemperature << " annealRate=" << annealRate << " iterPerT=" << iterPerTemp << " prefSampling=" << prefSampling << std::endl;
   }
 
   std::unique_ptr<bisSimpleMatrix<float> > ref_points(new bisSimpleMatrix<float>("ref_points_json"));
@@ -847,7 +848,15 @@ unsigned char*  runLinearRPMRegistrationWASM(unsigned char* in_reference,
     RPM->initialize(ref_points.get(),target_points.get(),numlandmarks,1,0,0,debug);
   }
 
-  RPM->run(transformMode,correspondenceMode,initialTemperature,finalTemperature,annealRate,useCentroids,initial_transformation.get(),debug);
+  RPM->run(transformMode,
+           correspondenceMode,
+           initialTemperature,
+           finalTemperature,
+           iterPerTemp,
+           annealRate,
+           useCentroids,
+           initial_transformation.get(),
+           debug);
 
   std::unique_ptr<bisSimpleMatrix<float> > output(RPM->getOutputMatrix());
   bisUtil::mat44 m; output->exportMatrix(m);
