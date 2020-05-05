@@ -160,12 +160,12 @@ unsigned char*  test_landmarkApproximationWASM(unsigned char* in_source_ptr,
     std::cout << "___ Target Allocated = " << target->getNumRows() << "*" << target->getNumCols() << std::endl;
 
   int numpoints=source->getNumRows();
-  std::unique_ptr<bisSimpleMatrix<float> > weights(new bisSimpleMatrix<float>("weights_points_json"));
-  weights->allocate(numpoints,1);
+  std::unique_ptr<bisSimpleVector<float> > weights(new bisSimpleVector<float>("weights_points_json"));
+  weights->allocate(numpoints);
   weights->fill(1.0);
 
   if (debug) 
-    std::cout << "___ Weights Allocated = " << weights->getNumRows() << "*" << weights->getNumCols() << std::endl;
+    std::cout << "___ Weights Allocated = " << weights->getLength() << std::endl;
 
   
   float minc[3],maxc[3];
