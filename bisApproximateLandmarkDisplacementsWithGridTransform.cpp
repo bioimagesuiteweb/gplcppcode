@@ -100,9 +100,9 @@ float bisApproximateLandmarkDisplacementsWithGridTransform::computeValue(std::ve
       this->lastSmoothness=this->currentGridTransformation->getTotalBendingEnergy();
       v+=this->lambda*this->lastSmoothness;
     }
-  if (count < 11) {
-    std::cout << "sum=" << sum << " last=" << this->lastSimilarity << " v=" << v << std::endl;
-  }
+  //if (count < 11) {
+  //std::cout << "sum=" << sum << " last=" << this->lastSimilarity << " v=" << v << std::endl;
+  //}
   count=count+1;
   return v;
 }

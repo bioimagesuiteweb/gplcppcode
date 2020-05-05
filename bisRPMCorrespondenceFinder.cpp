@@ -419,9 +419,6 @@ int bisRPMCorrespondenceFinder::computeCorrespondencesRPM(bisAbstractTransformat
         out_ref[row*3+ia]=x[ia];
       }
 
-      //if (row==117)
-      //bisPointRegistrationUtils::printMatrix((bisMatrixTransformation*)Transformation,"Before Mapping");
-      
       Transformation->transformPoint(x,tx);
       int nump=locator->getPointsWithinRadius(tx,threshold,pointlist,0);
       if (nump<3) {

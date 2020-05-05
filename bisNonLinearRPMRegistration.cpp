@@ -223,16 +223,10 @@ int bisNonLinearRPMRegistration::run(int in_correspondenceMode,
     std::cout << "___            CPS= " << CPSBegin << ":" << CPSEnd << " , smoothnesss=" << SmoothnessBegin << ":" << SmoothnessEnd << std::endl;
     std::cout << "___            NumPoints= " << numpoints << " vs " << numpoints2 << " temperatures=" << InitialTemperature << ":" << AnnealRate << ":" << FinalTemperature << std::endl;
   }
-
-  if (debug) {
-    bisPointRegistrationUtils::printTwoPoints(this->SampledReferencePoints.get(),"ref");
-    bisPointRegistrationUtils::printTwoPoints(this->SampledTargetPoints.get(),"target");
-  }
-
-  
   
   int iteration_count=0;
   totaliter*=IterationPerTemperature;
+  int incr=int(numpoints/5);
   while (Temperature > FinalTemperature)
     {
       for (int it=1;it<=IterationPerTemperature;it++) {
@@ -250,9 +244,7 @@ int bisNonLinearRPMRegistration::run(int in_correspondenceMode,
                                      debug);
         
         if (debug) {
-          bisPointRegistrationUtils::printJointPoints(OutputRefLandmarks,OutputTargetLandmarks,OutputWeights,"out_ref->targ",117);
-          bisPointRegistrationUtils::printTwoPoints(OutputRefLandmarks,"ref");
-          bisPointRegistrationUtils::printTwoPoints(OutputTargetLandmarks,"targ");
+          bisPointRegistrationUtils::printJointPoints(OutputRefLandmarks,OutputTargetLandmarks,OutputWeights,"out_ref->targ",incr);
         }
 
         this->initializeGrid(CPS,CPSBegin,CPSEnd,OutputRefLandmarks);
