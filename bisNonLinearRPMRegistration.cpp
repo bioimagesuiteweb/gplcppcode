@@ -87,7 +87,7 @@ int bisNonLinearRPMRegistration::initializeWithLinear(bisMatrixTransformation* i
       m[ia][ib]=inverse(ia,ib);
   tmp->setMatrix(m);
 
-  bisSimpleMatrix<float>* mappedPoints=bisPointRegistrationUtils::transformPoints(source,tmp.get(),debug);
+  bisSimpleMatrix<float>* mappedPoints=bisPointRegistrationUtils::transformPoints(target,tmp.get(),debug);
   return bisRPMCorrespondenceFinder::initialize(source,mappedPoints,maxnumlandmarks,samplingweight,source_labels,target_labels,debug);
   
   
