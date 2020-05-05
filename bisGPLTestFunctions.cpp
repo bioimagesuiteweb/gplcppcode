@@ -300,8 +300,7 @@ unsigned char*  test_rpmCorrespondenceEstimatorWASM(unsigned char* in_source,
   }
 
 
-  Eigen::SparseMatrix<float,Eigen::RowMajor> M(numref,numtarget);
-  bisRPMCorrespondenceFinder::computeCorrespondencesRPM(matrix.get(),locator.get(),M,
+  bisRPMCorrespondenceFinder::computeCorrespondencesRPM(matrix.get(),locator.get(),
                                                         mode,
                                                         source->getData(),RefLabels->getData(),
                                                         target->getData(),TargLabels->getData(),

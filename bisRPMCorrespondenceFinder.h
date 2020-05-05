@@ -80,7 +80,6 @@ public:
 
   /** Compute And Normalize Distance Matrix */
   static int computeCorrespondencesRPM(bisAbstractTransformation* Transformation,bisPointLocator* locator,
-                                       Eigen::SparseMatrix<float,Eigen::RowMajor>& M,
                                        int mode,
                                        float* reference_pts,int* reference_labels,
                                        float* target_pts,int* target_labels,
@@ -99,6 +98,10 @@ public:
 
   // Cleanup
   void cleanup();
+
+  // Normalization
+  static int normalizeMatrixMixture(Eigen::SparseMatrix<float,Eigen::RowMajor> M);
+  static int normalizeMatrixRPM(Eigen::SparseMatrix<float,Eigen::RowMajor> M);
 
 private:
 

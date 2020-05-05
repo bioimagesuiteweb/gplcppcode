@@ -125,21 +125,16 @@ int bisLinearRPMRegistration::run(int in_transformMode,
     std::cout << "___            NumPoints= " << numpoints << " vs " << numpoints2 << " temperatures=" << InitialTemperature << ":" << AnnealRate << ":" << FinalTemperature << std::endl;
   }
 
-  if (debug) {
-    bisPointRegistrationUtils::printTwoPoints(this->SampledReferencePoints.get(),"ref");
-    bisPointRegistrationUtils::printTwoPoints(this->SampledTargetPoints.get(),"target");
-  }
-
-  
-  
   int iteration=0;
   int totaliter=int(fabs(log(InitialTemperature/FinalTemperature)/log(AnnealRate))+1.0)*IterationPerTemperature;
+  int incr=int(numpoints/5);
+  
   while (Temperature > FinalTemperature)
     {
       for (int it=0;it<IterationPerTemperature;it++) {
         iteration=iteration+1;
         if (debug) 
-          std::cout << "Beginning iteration " << iteration << "/" << totaliter << ". Temp=" << Temperature << "  TransformMode=" << TransformMode << std::endl;
+          std::cout << "___ Beginning iteration " << iteration << "/" << totaliter << ". Temp=" << Temperature << "  TransformMode=" << TransformMode << std::endl;
         
         
         this->estimateCorrespondence(this->Output,
@@ -151,21 +146,22 @@ int bisLinearRPMRegistration::run(int in_transformMode,
                                      debug);
         
         if (debug) {
-          bisPointRegistrationUtils::printJointPoints(OutputRefLandmarks,OutputTargetLandmarks,OutputWeights,"out_ref->targ",117);
-          bisPointRegistrationUtils::printTwoPoints(OutputRefLandmarks,"ref");
-          bisPointRegistrationUtils::printTwoPoints(OutputTargetLandmarks,"targ");
+          bisPointRegistrationUtils::printJointPoints(OutputRefLandmarks,OutputTargetLandmarks,OutputWeights,"out_ref->targ",incr);
         }
         bisPointRegistrationUtils::computeLandmarkTransformation(OutputRefLandmarks,
                                                                  OutputTargetLandmarks,
                                                                  TransformMode,
                                                                  this->Output,
                                                                  OutputWeights,
-                                                                 debug);
+                                                                 0);
         
-        if (debug)
+        if (debug) {
           bisPointRegistrationUtils::printMatrix(this->Output,"End");
+          std::cout << "__ Mean RMS=" << bisPointRegistrationUtils::computeMappingError(OutputRefLandmarks,OutputTargetLandmarks,this->Output) << std::endl;
+        }
       }
       Temperature*=AnnealRate;
+      // Check error
       
     }
 
