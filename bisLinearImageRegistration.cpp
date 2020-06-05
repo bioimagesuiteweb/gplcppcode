@@ -1,28 +1,28 @@
 /*  License
  
- _This file is Copyright 2018 by the Image Processing and Analysis Group (BioImage Suite Team). Dept. of Radiology & Biomedical Imaging, Yale School of Medicine._ It is released under the terms of the GPL v2.
+    _This file is Copyright 2018 by the Image Processing and Analysis Group (BioImage Suite Team). Dept. of Radiology & Biomedical Imaging, Yale School of Medicine._ It is released under the terms of the GPL v2.
  
- ----
+    ----
      
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
    
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
    
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-   See also  http: www.gnu.org/licenses/gpl.html
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+    See also  http: www.gnu.org/licenses/gpl.html
    
-   If this software is modified please retain this statement and add a notice
-   that it had been modified (and by whom).  
+    If this software is modified please retain this statement and add a notice
+    that it had been modified (and by whom).  
  
- Endlicense */
+    Endlicense */
 
 #include "bisLinearImageRegistration.h"
 #include "bisImageAlgorithms.h"
@@ -104,40 +104,40 @@ float bisLinearImageRegistration::computeValue(std::vector<float>& position)
     {
       weight1_ptr=this->level_reference_weight->getImageData();
       if (this->use_weights==2)
-	{
-	  bisImageAlgorithms::resliceImage(this->level_target_weight.get(),this->temp_target_weight.get(),this->internalTransformation.get(),1,0.0);
-	  weight2_ptr=this->temp_target_weight->getImageData();
-	}
+        {
+          bisImageAlgorithms::resliceImage(this->level_target_weight.get(),this->temp_target_weight.get(),this->internalTransformation.get(),1,0.0);
+          weight2_ptr=this->temp_target_weight->getImageData();
+        }
     }
 
   this->internalHistogram->weightedFillHistogram(this->level_reference->getImageData(),
-						 this->temp_target->getImageData(),
-						 weight1_ptr,
-						 weight2_ptr,
-						 use_weights,
-						 1.0,
-						 1, // reset
-						 this->level_dimensions,
-						 this->level_bounds);
+                                                 this->temp_target->getImageData(),
+                                                 weight1_ptr,
+                                                 weight2_ptr,
+                                                 use_weights,
+                                                 1.0,
+                                                 1, // reset
+                                                 this->level_dimensions,
+                                                 this->level_bounds);
 
 
   float mv=(float)this->internalHistogram->computeMetric(this->metric);
 
   /*  count=count+1;
-  if (count>=13 && count<=20)
-    {
+      if (count>=13 && count<=20)
+      {
       std::vector<float> p(12);
       this->internalTransformation->storeParameterVector(p,1);
       bisUtil::mat44 m; this->internalTransformation->getMatrix(m);
       std::cout << count << " [";
       for (int j=0;j<p.size();j++)
-	std::cout << p[j] << " ";
+      std::cout << p[j] << " ";
       std::cout << "] [";
-	for (int row=0;row<=2;row++) {
+      for (int row=0;row<=2;row++) {
 	  for (int col=0;col<=3;col++) {
-	    std::cout << m[row][col] << " ";
+      std::cout << m[row][col] << " ";
 	  }
-	}
+      }
       std::cout << "] = " << mv << std::endl;
       }*/
 
@@ -262,12 +262,12 @@ void bisLinearImageRegistration::run(bisJSONParameterList* plist)
       this->generateFeedback("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
       this->initializeLevel(level);
       if (level==numlevels)
-	{
-	  // Set Shifts now that the first level is initialized ...
-	  int dim_ref[3]; level_reference->getImageDimensions(dim_ref);
-	  float spa_ref[3]; level_reference->getImageSpacing(spa_ref);
-	  int dim_trg[3]; level_target->getImageDimensions(dim_trg);
-	  float spa_trg[3]; level_target->getImageSpacing(spa_trg);
+        {
+          // Set Shifts now that the first level is initialized ...
+          int dim_ref[3]; level_reference->getImageDimensions(dim_ref);
+          float spa_ref[3]; level_reference->getImageSpacing(spa_ref);
+          int dim_trg[3]; level_target->getImageDimensions(dim_trg);
+          float spa_trg[3]; level_target->getImageSpacing(spa_trg);
           if (centeronrefonly) {
             this->generateFeedback("+ + + + +");
             this->generateFeedback("+ + + + + Shifting Based on reference only ");
@@ -302,20 +302,20 @@ void bisLinearImageRegistration::run(bisJSONParameterList* plist)
 
 
       for (int step=numsteps;step>=1;step=step-1)
-	{
-	  if (enable_feedback)
-	    std::cout << "+ +  In step = " << step << ". Iterations = " << iterations << ", optimization=" << optimization <<", current=" << this->current_step_size << "." << std::endl;
-	  if (optimization==0)
-	    optimizer->computeSlowClimb(position,this->current_step_size,iterations);
-	  else if (optimization==1)
-	    optimizer->computeGradientDescent(position,iterations,tolerance);
-	  else
-	    optimizer->computeConjugateGradient(position,iterations,tolerance);
+        {
+          if (enable_feedback)
+            std::cout << "+ +  In step = " << step << ". Iterations = " << iterations << ", optimization=" << optimization <<", current=" << this->current_step_size << "." << std::endl;
+          if (optimization==0)
+            optimizer->computeSlowClimb(position,this->current_step_size,iterations);
+          else if (optimization==1)
+            optimizer->computeGradientDescent(position,iterations,tolerance);
+          else
+            optimizer->computeConjugateGradient(position,iterations,tolerance);
 	  
-	  this->current_step_size=this->current_step_size/2.0f;
-	}
+          this->current_step_size=this->current_step_size/2.0f;
+        }
       if (level==2)
-	this->internalTransformation->setMode(mode);
+        this->internalTransformation->setMode(mode);
       this->generateFeedback("+ + ");
       this->generateFeedback("+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +");
     }
