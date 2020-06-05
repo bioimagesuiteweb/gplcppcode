@@ -303,21 +303,24 @@ void bisNonLinearImageRegistration::initializeLevelAndGrid(int lv,int numlevels)
   float spa_ref[3]; level_reference->getImageSpacing(spa_ref);
 
   float grid_ori[3] = { 0,0,0};
+  this->current_dim[2]=1;
+  this->current_cps[2]=1.0;
 
-
+  int maxdim=2;
+  if (dim_ref[2]<2)
+    maxdim=1;
   
-  for (int ia=0;ia<=2;ia++)
+  for (int ia=0;ia<=maxdim;ia++)
     {
       float imagesize=(dim_ref[ia]-1)*spa_ref[ia]+1;
       int numcp=int(imagesize/cps+0.5);
       if (numcp<4)
-	numcp=4;
+        numcp=4;
       this->current_dim[ia]=numcp;
       this->current_cps[ia]=imagesize/(this->current_dim[ia]-1.05f);
       float outsz=(numcp-1)*this->current_cps[ia];
       float offset=outsz-imagesize;
       grid_ori[ia]=-0.5f*offset;
-
     }
 
   std::stringstream strss;
